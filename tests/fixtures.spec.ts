@@ -2,11 +2,18 @@ import { readFileSync } from 'node:fs'
 
 import { describe, expect, it } from 'vitest'
 
-import { deserializeCard } from '../src/VCard'
+import { deserializeCard, serialize, serializeProperty } from '../src/VCard'
 import { VPropertyBase } from '../src/properties/VPropertyBase'
 
 function fixture(path: string): string {
   return readFileSync(new URL(`./fixtures/${path}`, import.meta.url), 'utf8')
+}
+
+function comparableCard(card: ReturnType<typeof deserializeCard>) {
+  return {
+    version: card.version,
+    properties: card.properties.map(serializeProperty),
+  }
 }
 
 describe('valid vCard fixtures', () => {
@@ -64,7 +71,19 @@ describe('valid vCard fixtures', () => {
     }
   })
 
-  it.todo('round-trips every valid fixture once card serialization exists')
+  it.each([
+    'valid/v3-basic.vcf',
+    'valid/v4-basic.vcf',
+    'valid/folded-lines.vcf',
+    'valid/escaped-text.vcf',
+    'valid/grouped-properties.vcf',
+    'valid/extensions.vcf',
+  ])('round-trips %s without changing its card data', path => {
+    const original = deserializeCard(fixture(path))
+    const roundTripped = deserializeCard(serialize(original))
+
+    expect(comparableCard(roundTripped)).toEqual(comparableCard(original))
+  })
 })
 
 describe('invalid vCard fixtures', () => {
