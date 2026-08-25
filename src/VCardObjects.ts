@@ -142,4 +142,8 @@ export class VCard implements VCardInterface {
 	get telephones(): VPropertyUriType[] {
 		return this.all('TEL') as VPropertyUriType[]
 	}
+
+	get emails(): VPropertyTextType[] {
+		return this.all('EMAIL') as VPropertyTextType[]
+	}
 }

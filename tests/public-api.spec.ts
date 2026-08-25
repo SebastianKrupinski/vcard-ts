@@ -53,6 +53,11 @@ describe('public API', () => {
     expect(card.first('missing')).toBeNull()
     expect(card.all('email')).toHaveLength(2)
     expect(card.all('missing')).toEqual([])
+    expect(card.emails).toHaveLength(2)
+    expect(card.emails.map(email => email.value)).toEqual([
+      'first@example.com',
+      'second@example.com',
+    ])
   })
 
   it('creates empty editable cards for supported output versions', () => {
