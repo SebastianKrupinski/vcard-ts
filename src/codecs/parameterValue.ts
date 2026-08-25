@@ -14,3 +14,10 @@ export function decodeParameterValue(value: string): string {
 	}
 	return decoded
 }
+
+export function encodeParameterValue(value: string): string {
+	return value
+		.replace(/\^/g, '^^')
+		.replace(/\n/g, '^n')
+		.replace(/"/g, "^'")
+}
