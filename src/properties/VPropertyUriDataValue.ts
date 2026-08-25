@@ -14,11 +14,13 @@ export class VPropertyUriDataValue {
 		// Format: data:[<mimetype>][;base64],<data>
 		// PHOTO:data:image/jpeg;base64,MIICajCCAdOgAwIBAgICBEUwDQYJKoZIhv
 		if (value.startsWith('data:')) {
-			const parts = value.substring(5).split(',')
-			const meta = parts[0].split(';')
+			const payload = value.substring(5)
+			const separator = payload.indexOf(',')
+			const metadata = separator === -1 ? payload : payload.slice(0, separator)
+			const meta = metadata.split(';')
 			this._format = meta[0] || null
-			this._encoding = meta[1] || null
-			this._data = parts[1] || null
+			this._encoding = meta.slice(1).join(';') || null
+			this._data = separator === -1 ? null : payload.slice(separator + 1)
 		} else {
 			this._data = value
 		}

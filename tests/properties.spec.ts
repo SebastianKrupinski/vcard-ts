@@ -201,4 +201,20 @@ describe('property deserialization', () => {
       longitude: -79.3832,
     })
   })
+
+  it('preserves metadata and commas in data URI payloads', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'PHOTO:data:text/plain;charset=utf-8;base64,first,second,third',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('PHOTO')?.value).toMatchObject({
+      format: 'text/plain',
+      encoding: 'charset=utf-8;base64',
+      data: 'first,second,third',
+    })
+  })
 })
