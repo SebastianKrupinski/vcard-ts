@@ -1,0 +1,6 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Folded Example
+NOTE:This value is deliberately fo
+ lded across two physical lines.
+END:VCARD

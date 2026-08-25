@@ -1,0 +1,6 @@
+BEGIN:VCARD
+VERSION:4.0
+FN:Extension Example
+X-SOCIALPROFILE;TYPE=github:https://github.com/example
+X-CUSTOM-FIELD:custom value
+END:VCARD

@@ -149,11 +149,18 @@ export class VCardObject implements VCardObjectInterface {
 	}
 
 	get addresses(): VPropertyAddressType[] {
-		return this.fetch('ADR') as VPropertyAddressType[] ?? []
+		const properties = this.fetch('ADR')
+		if (!properties) return []
+		return Array.isArray(properties)
+			? properties as VPropertyAddressType[]
+			: [properties as VPropertyAddressType]
 	}
 
 	get telephones(): VPropertyUriType[] {
-		return this.fetch('TEL') as VPropertyUriType[] ?? []
+		const properties = this.fetch('TEL')
+		if (!properties) return []
+		return Array.isArray(properties)
+			? properties as VPropertyUriType[]
+			: [properties as VPropertyUriType]
 	}
 }
-

@@ -1,0 +1,7 @@
+BEGIN:VCARD
+VERSION:3.0
+FN:Jane Doe
+N:Doe;Jane;;;
+EMAIL;TYPE=WORK:jane.doe@example.com
+TEL;TYPE=CELL:tel:+14165550123
+END:VCARD

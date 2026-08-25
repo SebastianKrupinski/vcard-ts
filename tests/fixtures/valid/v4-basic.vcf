@@ -1,0 +1,8 @@
+BEGIN:VCARD
+VERSION:4.0
+FN:John Smith
+N:Smith;John;;;
+KIND:individual
+EMAIL;PREF=1:john.smith@example.com
+URL:https://example.com/john
+END:VCARD
