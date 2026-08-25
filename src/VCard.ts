@@ -185,24 +185,12 @@ function normalizeNewlines(data: string): string {
 
 /**
  *
- * @param v
- */
-/**
- *
- * @param v
- */
-function encodeValue(v: string): string {
-	return v
-		.replace(/\\/g, '\\\\')
-		.replace(/\n/g, '\\n')
-		.replace(/,/g, '\\,')
-		.replace(/;/g, '\\;')
-}
-
-/**
- *
  * @param text
  * @param sep
+ */
+/**
+ *
+ * @param v
  */
 function splitOutsideQuotes(text: string, sep: string): string[] {
 	const out: string[] = []

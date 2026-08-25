@@ -15,6 +15,14 @@ export function decodePropertyValue(value: string): string {
 	return decoded
 }
 
+export function encodePropertyValue(value: string): string {
+	return value
+		.replace(/\\/g, '\\\\')
+		.replace(/\n/g, '\\n')
+		.replace(/,/g, '\\,')
+		.replace(/;/g, '\\;')
+}
+
 export function splitPropertyValue(value: string, delimiter: string): string[] {
 	const parts: string[] = []
 	let current = ''
