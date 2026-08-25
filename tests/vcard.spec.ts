@@ -70,6 +70,17 @@ describe('vCard deserialization', () => {
       .toThrow('missing END:VCARD')
   })
 
+  it('rejects nested card markers', () => {
+    expect(() => deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'BEGIN:VCARD',
+      'FN:Jane Doe',
+      'END:VCARD',
+      'END:VCARD',
+    ].join('\r\n'))).toThrow('nested card marker')
+  })
+
   it('rejects a missing VERSION property', () => {
     expect(() => deserializeCard([
       'BEGIN:VCARD',

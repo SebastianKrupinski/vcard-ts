@@ -52,10 +52,13 @@ export function deserializeCard(data: string): VCard {
 	const lines = unfoldLine(data)
 	const properties = new VPropertyCollection()
 
-	for (const rawLine of lines) {
+	for (const [index, rawLine] of lines.entries()) {
 		const line = rawLine.trimEnd()
 		if (line.length === 0) continue
-		if (/^BEGIN:/i.test(line) || /^END:/i.test(line)) continue
+		if (index === 0 || index === lines.length - 1) continue
+		if (/^(BEGIN|END):VCARD$/i.test(line)) {
+			throw new Error('Invalid vCard data: nested card marker')
+		}
 
 		const prop = deserializeProperty(line)
 		if (!prop) continue
