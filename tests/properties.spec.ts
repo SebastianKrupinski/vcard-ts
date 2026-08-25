@@ -134,4 +134,19 @@ describe('property deserialization', () => {
       unit: 'Research, Development',
     })
   })
+
+  it('preserves escaped separators in gender identity values', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'GENDER:F;non-binary\\; femme',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.gender?.value).toMatchObject({
+      sex: 'F',
+      identity: 'non-binary; femme',
+    })
+  })
 })
