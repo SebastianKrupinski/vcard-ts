@@ -1,4 +1,5 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
+import { decodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
 
 export class VPropertyOrganizationValue {
 
@@ -11,7 +12,7 @@ export class VPropertyOrganizationValue {
 	}
 
 	deserialize(value: string): VPropertyOrganizationValue {
-		const parts = value.split(';')
+		const parts = splitPropertyValue(value, ';').map(decodePropertyValue)
 		this._name = parts[0] || ''
 		this._unit = parts[1] || null
 		return this

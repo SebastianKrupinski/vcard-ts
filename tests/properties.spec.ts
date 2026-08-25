@@ -117,4 +117,21 @@ describe('property deserialization', () => {
       region: 'ON',
     })
   })
+
+  it('preserves escaped separators in organization values', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'ORG:Example\\; Holdings;Research\\, Development',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    const organization = card.first('ORG')
+
+    expect(organization?.value).toMatchObject({
+      name: 'Example; Holdings',
+      unit: 'Research, Development',
+    })
+  })
 })
