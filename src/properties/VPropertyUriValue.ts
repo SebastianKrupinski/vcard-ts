@@ -11,9 +11,14 @@ export class VPropertyUriValue {
 	}
 
 	deserialize(value: string): VPropertyUriValue {
-		const [scheme, reference] = value.split(':')
-		this._scheme = scheme
-		this._reference = reference
+		const separator = value.indexOf(':')
+		if (separator === -1) {
+			this._scheme = ''
+			this._reference = value
+		} else {
+			this._scheme = value.slice(0, separator)
+			this._reference = value.slice(separator + 1)
+		}
 		return this
 	}
 

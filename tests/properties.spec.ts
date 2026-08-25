@@ -163,4 +163,24 @@ describe('property deserialization', () => {
     expect(card.first('NICKNAME')?.value).toEqual(['Jane', 'J.D., Junior'])
     expect(card.first('CATEGORIES')?.value).toEqual(['Friend', 'Research, Development'])
   })
+
+  it('preserves URI content after the first colon', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'URL:https://example.com:8443/profile',
+      'TEL:12345',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('URL')?.value).toMatchObject({
+      scheme: 'https',
+      reference: '//example.com:8443/profile',
+    })
+    expect(card.first('TEL')?.value).toMatchObject({
+      scheme: '',
+      reference: '12345',
+    })
+  })
 })
