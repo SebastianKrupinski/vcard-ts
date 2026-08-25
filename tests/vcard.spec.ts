@@ -75,12 +75,12 @@ describe('vCard deserialization', () => {
     ].join('\r\n'))).toThrow('expected exactly one VERSION property, found 2')
   })
 
-  it('rejects an unsupported VERSION value', () => {
+  it.each(['2.1', '5.0'])('rejects unsupported VERSION value %s', version => {
     expect(() => deserializeCard([
       'BEGIN:VCARD',
-      'VERSION:5.0',
+      `VERSION:${version}`,
       'FN:Jane Doe',
       'END:VCARD',
-    ].join('\r\n'))).toThrow('unsupported VERSION value 5.0')
+    ].join('\r\n'))).toThrow(`unsupported VERSION value ${version}`)
   })
 })

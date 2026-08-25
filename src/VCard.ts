@@ -13,7 +13,7 @@ import { VPropertyCollection } from './properties/VPropertyCollection'
 export function deserialize(data: string): VCard[] {
 
 	// sanity check - for minimal vCard length
-	// (BEGIN:VCARD\nVERSION:2.1\nFN:a\nEND:VCARD)
+	// (BEGIN:VCARD\nVERSION:4.0\nFN:a\nEND:VCARD)
 	if (data.length < 30) {
 		throw new Error('Invalid input data: length too short')
 	}
