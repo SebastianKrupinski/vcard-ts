@@ -96,8 +96,9 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 		// Strip the leading semicolon and extract the next parameter
 		remaining = remaining.substring(1)
 		result = extractPropertyParameter(remaining)
-		// if no parameter found, break to avoid infinite loop
-		if (!result) break
+		if (!result) {
+			throw new Error(`Invalid property parameter: ${data}`)
+		}
 		remaining = result?.remainder.trimStart()
 		const parameterName = result.name.toUpperCase()
 		const parameterValue = result.value.startsWith('"') && result.value.endsWith('"')

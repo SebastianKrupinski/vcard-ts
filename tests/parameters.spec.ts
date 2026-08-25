@@ -75,4 +75,13 @@ describe('parameter deserialization', () => {
       value: 'WORK,VOICE',
     })
   })
+
+  it('rejects a malformed parameter instead of corrupting the value', () => {
+    expect(() => deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'EMAIL;TYPE:jane@example.com',
+      'END:VCARD',
+    ].join('\r\n'))).toThrow('Invalid property parameter')
+  })
 })
