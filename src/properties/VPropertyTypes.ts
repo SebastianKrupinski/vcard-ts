@@ -1,4 +1,5 @@
 import { VPropertyAddressType } from "./VPropertyAddressType"
+import { VPropertyBase } from "./VPropertyBase"
 import { VPropertyGenderType } from "./VPropertyGenderType"
 import { VPropertyNameType } from "./VPropertyNameType"
 import { VPropertyOrganizationType } from "./VPropertyOrganizationType"
@@ -8,7 +9,7 @@ import { VPropertyTextType } from "./VPropertyTextType"
 import { VPropertyUriType } from "./VPropertyUriType"
 
 // VCard properties with runtime introspection capability
-export const knownProperties = {
+export const knownProperties: Record<string, new (...args: any[]) => VPropertyBase<any>> = {
     // Cardinality: 1
     VERSION: VPropertyTextType,
     // Cardinality: *1

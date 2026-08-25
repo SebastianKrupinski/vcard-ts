@@ -6,9 +6,9 @@ export class VPropertyBase<T = string> implements VPropertyBaseInterface<T | nul
 
 	protected _id: string
 	protected _name: string
-	protected _group: string | null
+	protected _group: string | null = null
 	protected _params: VParameterCollectionInterface
-	protected _value: T | null
+	protected _value: T | null = null
 
 	constructor(
 		name: string,

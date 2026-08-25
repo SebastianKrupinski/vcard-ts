@@ -1,4 +1,3 @@
-import { map } from 'jquery'
 import { VParameterCollection, VParameterObject } from './parameters/VParameterObject'
 import { VPropertyBase } from './properties/VPropertyBase'
 import { VCardPropertyVersionValues } from './VCardInterfaces'
