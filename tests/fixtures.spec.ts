@@ -29,36 +29,36 @@ describe('valid vCard fixtures', () => {
 
   it('unfolds physical lines before parsing properties', () => {
     const card = deserializeCard(fixture('valid/folded-lines.vcf'))
-    const note = card.fetch('NOTE')
+    const note = card.first('NOTE')
 
-    expect(Array.isArray(note) ? null : note?.value)
+    expect(note?.value)
       .toBe('This value is deliberately folded across two physical lines.')
   })
 
   it('decodes escaped text values', () => {
     const card = deserializeCard(fixture('valid/escaped-text.vcf'))
-    const note = card.fetch('NOTE')
+    const note = card.first('NOTE')
 
     expect(card.formattedName?.value).toBe('Doe, Jane')
-    expect(Array.isArray(note) ? null : note?.value)
+    expect(note?.value)
       .toBe('Line one\nLine two; with a semicolon, and a comma')
   })
 
   it('preserves property groups and parameters', () => {
     const card = deserializeCard(fixture('valid/grouped-properties.vcf'))
-    const email = card.fetch('EMAIL')
+    const email = card.first('EMAIL')
 
-    expect(Array.isArray(email) ? null : email?.group).toBe('item1')
-    expect(Array.isArray(email) ? null : email?.params.TYPE?.value).toBe('HOME')
-    expect(Array.isArray(email) ? null : email?.params.PREF?.value).toBe('1')
-    expect(card.fetch('X-ABLabel')).not.toBeNull()
+    expect(email?.group).toBe('item1')
+    expect(email?.params.TYPE?.value).toBe('HOME')
+    expect(email?.params.PREF?.value).toBe('1')
+    expect(card.first('X-ABLabel')).not.toBeNull()
   })
 
   it('retains unknown extension properties in the generic model', () => {
     const card = deserializeCard(fixture('valid/extensions.vcf'))
 
     for (const name of ['X-SOCIALPROFILE', 'X-CUSTOM-FIELD']) {
-      const property = card.fetch(name)
+      const property = card.first(name)
       expect(property).toBeInstanceOf(VPropertyBase)
       expect(property?.constructor).toBe(VPropertyBase)
     }

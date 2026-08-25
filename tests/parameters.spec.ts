@@ -11,11 +11,10 @@ describe('parameter deserialization', () => {
       'END:VCARD',
     ].join('\r\n'))
 
-    const email = card.fetch('EMAIL')
+    const email = card.first('EMAIL')
 
     expect(email).not.toBeNull()
-    expect(Array.isArray(email)).toBe(false)
-    if (!email || Array.isArray(email)) return
+    if (!email) return
 
     expect(email.params.TYPE).toEqual({ name: 'TYPE', value: 'WORK' })
     expect(email.params.PREF).toEqual({ name: 'PREF', value: '1' })
@@ -30,11 +29,10 @@ describe('parameter deserialization', () => {
       'END:VCARD',
     ].join('\r\n'))
 
-    const email = card.fetch('EMAIL')
+    const email = card.first('EMAIL')
 
     expect(email).not.toBeNull()
-    expect(Array.isArray(email)).toBe(false)
-    if (!email || Array.isArray(email)) return
+    if (!email) return
 
     expect(email.group).toBe('item1')
     expect(email.hasGroup).toBe(true)

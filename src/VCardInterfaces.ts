@@ -6,7 +6,7 @@ export enum VCardPropertyVersionValues {
 	V4_0 = '4.0'
 }
 
-export interface VCardObjectInterface {
+export interface VCardInterface {
   version: VCardPropertyVersionValues
   properties: VPropertyCollectionInterface
 }

@@ -31,14 +31,14 @@ describe('property deserialization', () => {
     expect(card.name).toBeInstanceOf(VPropertyNameType)
     expect(card.addresses).toEqual([expect.any(VPropertyAddressType)])
     expect(card.telephones).toEqual([expect.any(VPropertyUriType)])
-    expect(card.fetch('ORG')).toBeInstanceOf(VPropertyOrganizationType)
-    expect(card.fetch('URL')).toBeInstanceOf(VPropertyUriType)
+    expect(card.first('ORG')).toBeInstanceOf(VPropertyOrganizationType)
+    expect(card.first('URL')).toBeInstanceOf(VPropertyUriType)
   })
 
   it('deserializes structured name and address values', () => {
     const card = deserializeCard(CARD)
     const name = card.name?.value
-    const address = card.fetch('ADR')
+    const address = card.first('ADR')
 
     expect(name).toMatchObject({
       family: 'Doe',
@@ -49,7 +49,6 @@ describe('property deserialization', () => {
     })
 
     expect(address).not.toBeNull()
-    expect(Array.isArray(address)).toBe(false)
     if (!(address instanceof VPropertyAddressType)) return
 
     expect(address.value).toMatchObject({
@@ -67,10 +66,10 @@ describe('property deserialization', () => {
   })
 
   it('preserves unknown extensions as generic properties', () => {
-    const custom = deserializeCard(CARD).fetch('X-CUSTOM')
+    const custom = deserializeCard(CARD).first('X-CUSTOM')
 
     expect(custom).toBeInstanceOf(VPropertyBase)
     expect(custom?.constructor).toBe(VPropertyBase)
-    expect(Array.isArray(custom) ? null : custom?.value).toBe('custom value')
+    expect(custom?.value).toBe('custom value')
   })
 })

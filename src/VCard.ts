@@ -1,7 +1,7 @@
 import { VParameterCollection, VParameterObject } from './parameters/VParameterObject'
 import { VPropertyBase } from './properties/VPropertyBase'
 import { VCardPropertyVersionValues } from './VCardInterfaces'
-import { VCardObject } from './VCardObjects'
+import { VCard } from './VCardObjects'
 import { knownProperties } from './properties/VPropertyTypes'
 import { VPropertyTextType } from './properties/VPropertyTextType'
 import { VPropertyCollection } from './properties/VPropertyCollection'
@@ -10,7 +10,7 @@ import { VPropertyCollection } from './properties/VPropertyCollection'
  *
  * @param data
  */
-export function deserialize(data: string, options?: {}): VCardObject[] {
+export function deserialize(data: string): VCard[] {
 
 	// sanity check - for minimal vCard length
 	// (BEGIN:VCARD\nVERSION:2.1\nFN:a\nEND:VCARD)
@@ -25,7 +25,7 @@ export function deserialize(data: string, options?: {}): VCardObject[] {
 	if (!dataBlocks) {
 		throw new Error('Invalid input data: no cards found')
 	}
-	const cardCollection: VCardObject[] = []
+	const cardCollection: VCard[] = []
 	// parse each card
 	dataBlocks.forEach((dataBlock, index) => {
 		const vCard = deserializeCard(dataBlock)
@@ -39,7 +39,7 @@ export function deserialize(data: string, options?: {}): VCardObject[] {
  * Throws if the payload is invalid or not a single VCARD.
  * @param data
  */
-export function deserializeCard(data: string, options?: {}): VCardObject {
+export function deserializeCard(data: string): VCard {
 	data = data.trim()
 	// sanity check - for start tag and end tag
 	if (!/^BEGIN:VCARD/gmiu.test(data)) {
@@ -68,7 +68,7 @@ export function deserializeCard(data: string, options?: {}): VCardObject {
 		? versionValue as VCardPropertyVersionValues
 		: VCardPropertyVersionValues.V3_0
 
-	return new VCardObject(version, properties)
+	return new VCard(version, properties)
 }
 
 /**
@@ -279,18 +279,18 @@ function unfoldLine(input: string): string[] {
  *
  * @param version
  */
-export function createEmptyVCard(version: '3.0' | '4.0' = '4.0'): VCardObject {
+export function createCard(version: '3.0' | '4.0' = '4.0'): VCard {
 	let v: VCardPropertyVersionValues
 	if (typeof version === 'string') {
 		v = VCardPropertyVersionValues[('V' + version.replace('.', '_')) as keyof typeof VCardPropertyVersionValues] ?? VCardPropertyVersionValues.V3_0
 	} else {
 		v = version
 	}
-	return new VCardObject(v, new VPropertyCollection())
+	return new VCard(v, new VPropertyCollection())
 }
 
 export default {
+	createCard,
 	deserialize,
 	deserializeCard,
-	createEmptyVCard,
 }

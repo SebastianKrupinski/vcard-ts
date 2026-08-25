@@ -6,11 +6,11 @@ import { VPropertyTemporalType } from './properties/VPropertyTemporalType'
 import { VPropertyTextType } from './properties/VPropertyTextType'
 import { VPropertyUriType } from './properties/VPropertyUriType'
 import {
-	VCardObjectInterface,
+	VCardInterface,
 	VCardPropertyVersionValues,
 } from './VCardInterfaces'
 
-export class VCardObject implements VCardObjectInterface {
+export class VCard implements VCardInterface {
 
 	private _version: VCardPropertyVersionValues = VCardPropertyVersionValues.V3_0
 	properties: VPropertyCollectionInterface
@@ -24,18 +24,17 @@ export class VCardObject implements VCardObjectInterface {
 		this.properties.push(value)
 	}
 
-	fetch(name: string): VPropertyBaseInterface|VPropertyBaseInterface[]|null {
-		const found = this.properties.filter((p) => p.name.toUpperCase() === name.toUpperCase())
-		if (found.length === 0) {
-			return null
-		} else if (found.length === 1) {
-			return found[0]
-		} else {
-			return found
-		}
+	/** Return the first property with this name, or null when it is absent. */
+	first(name: string): VPropertyBaseInterface | null {
+		return this.properties.find(property => property.name.toUpperCase() === name.toUpperCase()) ?? null
 	}
 
-	fetchById(id: string): VPropertyBaseInterface | null {
+	/** Return every property with this name in source order. */
+	all(name: string): VPropertyBaseInterface[] {
+		return this.properties.filter(property => property.name.toUpperCase() === name.toUpperCase())
+	}
+
+	findById(id: string): VPropertyBaseInterface | null {
 		const found = this.properties.find((p) => p.id === id)
 		return found || null
 	}
@@ -89,78 +88,58 @@ export class VCardObject implements VCardObjectInterface {
 	}
 
 	get prodId(): VPropertyTextType | null {
-		const prop = this.fetch('PRODID')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTextType : null
+		return this.first('PRODID') as VPropertyTextType | null
 	}
 
 	get uid(): VPropertyTextType | null {
-		const prop = this.fetch('UID')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTextType : null
+		return this.first('UID') as VPropertyTextType | null
 	}
 
 	get revision(): VPropertyTemporalType | null {
-		const prop = this.fetch('REV')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTemporalType : null
+		return this.first('REV') as VPropertyTemporalType | null
 	}
 
 	get kind(): VPropertyTextType | null {
-		const prop = this.fetch('KIND')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTextType : null
+		return this.first('KIND') as VPropertyTextType | null
 	}
 
 	get name(): VPropertyNameType | null {
-		const prop = this.fetch('N')
-		return prop && !Array.isArray(prop) ? prop as VPropertyNameType : null
+		return this.first('N') as VPropertyNameType | null
 	}
 
 	get formattedName(): VPropertyTextType | null {
-		const prop = this.fetch('FN')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTextType : null
+		return this.first('FN') as VPropertyTextType | null
 	}
 
 	get birthDay(): VPropertyTemporalType | null {
-		const prop = this.fetch('BDAY')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTemporalType : null
+		return this.first('BDAY') as VPropertyTemporalType | null
 	}
 
 	get birthPlace(): VPropertyTextType | null {
-		const prop = this.fetch('BIRTHPLACE')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTextType : null
+		return this.first('BIRTHPLACE') as VPropertyTextType | null
 	}
 
 	get deathDay(): VPropertyTemporalType | null {
-		const prop = this.fetch('DEATHDAY')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTemporalType : null
+		return this.first('DEATHDATE') as VPropertyTemporalType | null
 	}
 
 	get deathPlace(): VPropertyTextType | null {
-		const prop = this.fetch('DEATHPLACE')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTextType : null
+		return this.first('DEATHPLACE') as VPropertyTextType | null
 	}
 
 	get anniversary(): VPropertyTemporalType | null {
-		const prop = this.fetch('ANNIVERSARY')
-		return prop && !Array.isArray(prop) ? prop as VPropertyTemporalType : null
+		return this.first('ANNIVERSARY') as VPropertyTemporalType | null
 	}
 
 	get gender(): VPropertyGenderType | null {
-		const prop = this.fetch('GENDER')
-		return prop && !Array.isArray(prop) ? prop as VPropertyGenderType : null
+		return this.first('GENDER') as VPropertyGenderType | null
 	}
 
 	get addresses(): VPropertyAddressType[] {
-		const properties = this.fetch('ADR')
-		if (!properties) return []
-		return Array.isArray(properties)
-			? properties as VPropertyAddressType[]
-			: [properties as VPropertyAddressType]
+		return this.all('ADR') as VPropertyAddressType[]
 	}
 
 	get telephones(): VPropertyUriType[] {
-		const properties = this.fetch('TEL')
-		if (!properties) return []
-		return Array.isArray(properties)
-			? properties as VPropertyUriType[]
-			: [properties as VPropertyUriType]
+		return this.all('TEL') as VPropertyUriType[]
 	}
 }
