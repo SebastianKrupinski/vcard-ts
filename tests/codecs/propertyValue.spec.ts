@@ -8,6 +8,7 @@ import {
 import { VPropertyNameValue } from '../../src/properties/VPropertyNameValue'
 import { VPropertyAddressValue } from '../../src/properties/VPropertyAddressValue'
 import { VPropertyOrganizationValue } from '../../src/properties/VPropertyOrganizationValue'
+import { VPropertyGenderValue } from '../../src/properties/VPropertyGenderValue'
 
 describe('property value codec', () => {
   it('encodes and decodes text escape sequences', () => {
@@ -62,5 +63,11 @@ describe('property value codec', () => {
       .toBe('Example\\; Inc.;Research\\, Development')
     expect(new VPropertyOrganizationValue('Example').serialize())
       .toBe('Example;')
+  })
+
+  it('encodes structured gender components before joining them', () => {
+    const gender = new VPropertyGenderValue('F', 'non-binary; femme')
+
+    expect(gender.serialize()).toBe('F;non-binary\\; femme')
   })
 })

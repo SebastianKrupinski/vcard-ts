@@ -1,5 +1,5 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
-import { decodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
+import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
 
 export class VPropertyGenderValue {
 
@@ -19,7 +19,10 @@ export class VPropertyGenderValue {
 	}
 
 	serialize(): string {
-		return this._identity ? `${this._sex};${this._identity}` : this._sex
+		const sex = encodePropertyValue(this._sex)
+		return this._identity
+			? `${sex};${encodePropertyValue(this._identity)}`
+			: sex
 	}
 
 	type(): string {
