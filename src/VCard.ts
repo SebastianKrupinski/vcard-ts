@@ -185,59 +185,6 @@ function normalizeNewlines(data: string): string {
 
 /**
  *
- * @param text
- * @param sep
- */
-/**
- *
- * @param v
- */
-function splitOutsideQuotes(text: string, sep: string): string[] {
-	const out: string[] = []
-	let current = ''
-	let inQuotes = false
-	for (let i = 0; i < text.length; i++) {
-		const ch = text[i]
-		if (ch === '"') {
-			inQuotes = !inQuotes
-			continue
-		}
-		if (!inQuotes && ch === sep) {
-			out.push(current)
-			current = ''
-		} else {
-			current += ch
-		}
-	}
-	out.push(current)
-	return out
-}
-
-/**
- *
- * @param params
- * @param keepTypeQuotes
- */
-function encodeParams(params: Record<string, string[]>, keepTypeQuotes = false): string {
-	const out: string[] = []
-	for (const [k, values] of Object.entries(params)) {
-		const key = k.toUpperCase()
-		if (!values || values.length === 0) {
-			out.push(key)
-			continue
-		}
-		const encoded = values.map(v => {
-			const needsQuotes = /[,:;]/.test(v)
-			if (!keepTypeQuotes && key === 'TYPE') return v
-			return needsQuotes ? '"' + v + '"' : v
-		}).join(',')
-		out.push(`${key}=${encoded}`)
-	}
-	return out.join(';')
-}
-
-/**
- *
  * @param line
  * @param newline
  */

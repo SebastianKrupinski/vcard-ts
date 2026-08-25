@@ -21,3 +21,13 @@ export function encodeParameterValue(value: string): string {
 		.replace(/\n/g, '^n')
 		.replace(/"/g, "^'")
 }
+
+export function encodeParameters(parameters: VParameterCollectionInterface): string {
+	return Object.values(parameters).map(parameter => {
+		const name = parameter.name.toUpperCase()
+		const value = encodeParameterValue(parameter.value)
+		const needsQuotes = name !== 'TYPE' && /[,:;]/.test(value)
+		return `${name}=${needsQuotes ? `"${value}"` : value}`
+	}).join(';')
+}
+import type { VParameterCollectionInterface } from '../parameters/VParameterInterfaces'
