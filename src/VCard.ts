@@ -1,8 +1,9 @@
 import { VParameterCollection, VParameterObject } from './parameters/VParameterObject'
-import { decodeParameterValue } from './codecs/parameterValue'
-import { decodePropertyValue } from './codecs/propertyValue'
+import { decodeParameterValue, encodeParameters } from './codecs/parameterValue'
+import { decodePropertyValue, encodePropertyValue } from './codecs/propertyValue'
 import { normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
 import { VPropertyBase } from './properties/VPropertyBase'
+import type { VPropertyBaseInterface } from './properties/VPropertyInterfaces'
 import { VCardPropertyVersionValues } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
 import { knownProperties } from './properties/VPropertyTypes'
@@ -122,6 +123,27 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 		return new PropertyType(name, rawValue, group, params)
 	}
 	return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
+}
+
+export function serializeProperty(property: VPropertyBaseInterface<unknown>): string {
+	const group = property.hasGroup ? `${property.group}.` : ''
+	const parameters = encodeParameters(property.params)
+	const header = `${group}${property.name}${parameters ? `;${parameters}` : ''}`
+
+	return `${header}:${serializePropertyValue(property.value)}`
+}
+
+function serializePropertyValue(value: unknown): string {
+	if (value === null || value === undefined) return ''
+	if (typeof value === 'string') return encodePropertyValue(value)
+	if (Array.isArray(value)) {
+		return value.map(item => encodePropertyValue(String(item))).join(',')
+	}
+	if (typeof value === 'object' && 'serialize' in value
+		&& typeof value.serialize === 'function') {
+		return value.serialize()
+	}
+	return String(value)
 }
 
 /**
