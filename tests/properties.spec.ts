@@ -149,4 +149,18 @@ describe('property deserialization', () => {
       identity: 'non-binary; femme',
     })
   })
+
+  it('deserializes comma-separated text collections', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'NICKNAME:Jane,J.D.\\, Junior',
+      'CATEGORIES:Friend,Research\\, Development',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('NICKNAME')?.value).toEqual(['Jane', 'J.D., Junior'])
+    expect(card.first('CATEGORIES')?.value).toEqual(['Friend', 'Research, Development'])
+  })
 })
