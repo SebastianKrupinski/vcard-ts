@@ -39,6 +39,17 @@ describe('parameter deserialization', () => {
     expect(email.params.TYPE?.value).toBe('HOME')
   })
 
+  it('recognizes a one-character property group', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'a.EMAIL:jane@example.com',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('EMAIL')?.group).toBe('a')
+  })
+
   it('leaves the parameter collection empty when none are present', () => {
     const card = deserializeCard([
       'BEGIN:VCARD',

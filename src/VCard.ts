@@ -130,7 +130,7 @@ function extractPropertyHeader(data: string, options?: {}): { name: string; grou
 	const remaining = data.slice(header.length) // +1 to skip the ':' or ';'
 	let propertyName: string | null = null
 	let propertyGroup: string | null = null
-	if (header.indexOf('.') > 1) {
+	if (header.indexOf('.') >= 1) {
 		[propertyGroup, propertyName] = header.split('.', 2)
 	} else {
 		propertyName = header
