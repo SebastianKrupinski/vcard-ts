@@ -183,4 +183,22 @@ describe('property deserialization', () => {
       reference: '12345',
     })
   })
+
+  it.each([
+    ['3.0', '43.6532;-79.3832'],
+    ['4.0', 'geo:43.6532,-79.3832'],
+  ])('deserializes vCard %s geographic coordinates', (version, value) => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      `VERSION:${version}`,
+      'FN:Toronto',
+      `GEO:${value}`,
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('GEO')?.value).toMatchObject({
+      latitude: 43.6532,
+      longitude: -79.3832,
+    })
+  })
 })

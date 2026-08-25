@@ -12,7 +12,11 @@ export class VPropertyUriGeoValue extends VPropertyUriValue {
 	}
 
 	deserialize(value: string): VPropertyUriGeoValue {
-		const [lat, lon] = value.split(';')
+		const isUri = value.startsWith('geo:')
+		const coordinates = isUri
+			? value.slice(4).split(';', 1)[0].split(',', 2)
+			: value.split(';', 2)
+		const [lat, lon] = coordinates
 		this._latitude = parseFloat(lat) || 0
 		this._longitude = parseFloat(lon) || 0
 		return this
