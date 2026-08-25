@@ -1,6 +1,7 @@
 import { VParameterCollection, VParameterObject } from './parameters/VParameterObject'
 import { decodeParameterValue } from './codecs/parameterValue'
 import { decodePropertyValue } from './codecs/propertyValue'
+import { normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
 import { VPropertyBase } from './properties/VPropertyBase'
 import { VCardPropertyVersionValues } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
@@ -51,7 +52,7 @@ export function deserializeCard(data: string): VCard {
 		throw new Error('Invalid vCard data: missing END:VCARD')
 	}
 
-	const lines = unfoldLine(data)
+	const lines = unfoldContentLines(data)
 	const properties = new VPropertyCollection()
 
 	for (const [index, rawLine] of lines.entries()) {
@@ -173,48 +174,6 @@ function extractPropertyParameter(data: string): { name: string; value: string; 
 
 	// No parameter found at the start of the string
 	return null
-}
-
-/**
- *
- * @param data
- */
-function normalizeNewlines(data: string): string {
-	return data.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-}
-
-/**
- *
- * @param line
- * @param newline
- */
-function foldLine(line: string, newline: string): string {
-	const limit = 75
-	if (line.length <= limit) return line
-	const parts: string[] = []
-	let i = 0
-	while (i < line.length) {
-		parts.push(line.slice(i, i + limit))
-		i += limit
-	}
-	return parts.join(newline + ' ')
-}
-
-/**
- *
- * @param input
- */
-function unfoldLine(input: string): string[] {
-	const lines = normalizeNewlines(input).split('\n')
-	const output: string[] = []
-	for (const line of lines) {
-		if ((line.startsWith(' ') || line.startsWith('\t')) && output.length > 0) {
-			output[output.length - 1] += line.slice(1)
-		} else {
-			output.push(line)
-		}
-	}
-	return output
 }
 
 /**
