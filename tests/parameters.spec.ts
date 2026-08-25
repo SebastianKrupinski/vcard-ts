@@ -84,4 +84,16 @@ describe('parameter deserialization', () => {
       'END:VCARD',
     ].join('\r\n'))).toThrow('Invalid property parameter')
   })
+
+  it('decodes vCard 4 caret escapes in parameter values', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'EMAIL;LABEL="Desk^\'s^^phone^nSecond line":jane@example.com',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('EMAIL')?.params.LABEL?.value)
+      .toBe('Desk"s^phone\nSecond line')
+  })
 })

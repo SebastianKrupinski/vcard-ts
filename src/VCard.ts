@@ -3,7 +3,6 @@ import { VPropertyBase } from './properties/VPropertyBase'
 import { VCardPropertyVersionValues } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
 import { knownProperties } from './properties/VPropertyTypes'
-import { VPropertyTextType } from './properties/VPropertyTextType'
 import { VPropertyCollection } from './properties/VPropertyCollection'
 
 /**
@@ -101,13 +100,14 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 		}
 		remaining = result?.remainder.trimStart()
 		const parameterName = result.name.toUpperCase()
-		const parameterValue = result.value.startsWith('"') && result.value.endsWith('"')
+		const rawParameterValue = result.value.startsWith('"') && result.value.endsWith('"')
 			? result.value.slice(1, -1)
 			: result.value
+		const parameterValue = decodeParameterValue(rawParameterValue)
 		params[parameterName] = new VParameterObject(parameterName, parameterValue)
 	}
 	// the remaining part should start with ':', followed by the value
-	value = decodeValue(remaining.slice(1))
+	value = decodePropertyValue(remaining.slice(1))
 	// instantiate the property object
 	if (!name) {
 		return new VPropertyBase('', value ?? '', group, params)
@@ -183,7 +183,7 @@ function normalizeNewlines(data: string): string {
  *
  * @param v
  */
-function decodeValue(value: string): string {
+function decodePropertyValue(value: string): string {
 	let decoded = ''
 	for (let index = 0; index < value.length; index++) {
 		const character = value[index]
@@ -200,6 +200,23 @@ function decodeValue(value: string): string {
 		} else {
 			decoded += `\\${escaped}`
 		}
+	}
+	return decoded
+}
+
+function decodeParameterValue(value: string): string {
+	let decoded = ''
+	for (let index = 0; index < value.length; index++) {
+		if (value[index] !== '^' || index === value.length - 1) {
+			decoded += value[index]
+			continue
+		}
+
+		const escaped = value[++index]
+		if (escaped === '^') decoded += '^'
+		else if (escaped === "'") decoded += '"'
+		else if (escaped.toLowerCase() === 'n') decoded += '\n'
+		else decoded += `^${escaped}`
 	}
 	return decoded
 }
