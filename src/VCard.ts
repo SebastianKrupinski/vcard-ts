@@ -1,4 +1,6 @@
 import { VParameterCollection, VParameterObject } from './parameters/VParameterObject'
+import { decodeParameterValue } from './codecs/parameterValue'
+import { decodePropertyValue } from './codecs/propertyValue'
 import { VPropertyBase } from './properties/VPropertyBase'
 import { VCardPropertyVersionValues } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
@@ -88,7 +90,6 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 	let name: string | null = null
 	let group: string | null = null
 	const params = new VParameterCollection()
-	let value: string | null = null
 	let remaining: string
 	// extract the property name and group (if any)
 	({ name, group, remaining } = extractPropertyHeader(data))
@@ -110,16 +111,16 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 		params[parameterName] = new VParameterObject(parameterName, parameterValue)
 	}
 	// the remaining part should start with ':', followed by the value
-	value = decodePropertyValue(remaining.slice(1))
+	const rawValue = remaining.slice(1)
 	// instantiate the property object
 	if (!name) {
-		return new VPropertyBase('', value ?? '', group, params)
+		return new VPropertyBase('', decodePropertyValue(rawValue), group, params)
 	}
 	const PropertyType = knownProperties[name.toUpperCase()]
 	if (PropertyType) {
-		return new PropertyType(name, value, group, params)
+		return new PropertyType(name, rawValue, group, params)
 	}
-	return new VPropertyBase(name, value, group, params)
+	return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
 }
 
 /**
@@ -186,44 +187,6 @@ function normalizeNewlines(data: string): string {
  *
  * @param v
  */
-function decodePropertyValue(value: string): string {
-	let decoded = ''
-	for (let index = 0; index < value.length; index++) {
-		const character = value[index]
-		if (character !== '\\' || index === value.length - 1) {
-			decoded += character
-			continue
-		}
-
-		const escaped = value[++index]
-		if (escaped.toLowerCase() === 'n') {
-			decoded += '\n'
-		} else if (escaped === '\\' || escaped === ',' || escaped === ';') {
-			decoded += escaped
-		} else {
-			decoded += `\\${escaped}`
-		}
-	}
-	return decoded
-}
-
-function decodeParameterValue(value: string): string {
-	let decoded = ''
-	for (let index = 0; index < value.length; index++) {
-		if (value[index] !== '^' || index === value.length - 1) {
-			decoded += value[index]
-			continue
-		}
-
-		const escaped = value[++index]
-		if (escaped === '^') decoded += '^'
-		else if (escaped === "'") decoded += '"'
-		else if (escaped.toLowerCase() === 'n') decoded += '\n'
-		else decoded += `^${escaped}`
-	}
-	return decoded
-}
-
 /**
  *
  * @param v

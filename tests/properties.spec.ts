@@ -86,4 +86,19 @@ describe('property deserialization', () => {
     expect(card.first('NOTE')?.value).toBe('Line one\nLine two')
     expect(card.first('X-LITERAL')?.value).toBe('Literal\\n text')
   })
+
+  it('preserves escaped separators in structured names', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'N:Doe\\;Sr.;Jane\\, Marie;;;',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.name?.value).toMatchObject({
+      family: 'Doe;Sr.',
+      given: 'Jane, Marie',
+    })
+  })
 })
