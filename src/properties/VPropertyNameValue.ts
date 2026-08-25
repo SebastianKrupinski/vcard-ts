@@ -1,5 +1,5 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
-import { decodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
+import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
 
 export class VPropertyNameValue {
 
@@ -34,7 +34,9 @@ export class VPropertyNameValue {
 	}
 
 	serialize(): string {
-		return [this._family, this._given, this._additional, this._prefix, this._suffix].join(';')
+		return [this._family, this._given, this._additional, this._prefix, this._suffix]
+			.map(encodePropertyValue)
+			.join(';')
 	}
 
 	type(): string {
