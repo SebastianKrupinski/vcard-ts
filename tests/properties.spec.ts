@@ -101,4 +101,20 @@ describe('property deserialization', () => {
       given: 'Jane, Marie',
     })
   })
+
+  it('preserves escaped separators in structured addresses', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'ADR:;;123 Main St\\; Unit 4;Toronto;ON;M5V 1A1;Canada',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.addresses[0]?.value).toMatchObject({
+      street: '123 Main St; Unit 4',
+      locality: 'Toronto',
+      region: 'ON',
+    })
+  })
 })
