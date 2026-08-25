@@ -7,6 +7,7 @@ import {
 } from '../../src/codecs/propertyValue'
 import { VPropertyNameValue } from '../../src/properties/VPropertyNameValue'
 import { VPropertyAddressValue } from '../../src/properties/VPropertyAddressValue'
+import { VPropertyOrganizationValue } from '../../src/properties/VPropertyOrganizationValue'
 
 describe('property value codec', () => {
   it('encodes and decodes text escape sequences', () => {
@@ -49,5 +50,17 @@ describe('property value codec', () => {
 
     expect(address.serialize())
       .toBe(';;123 Main\\; Unit 4;Toronto\\, GTA;;;Canada')
+  })
+
+  it('encodes structured organization components before joining them', () => {
+    const organization = new VPropertyOrganizationValue(
+      'Example; Inc.',
+      'Research, Development',
+    )
+
+    expect(organization.serialize())
+      .toBe('Example\\; Inc.;Research\\, Development')
+    expect(new VPropertyOrganizationValue('Example').serialize())
+      .toBe('Example;')
   })
 })

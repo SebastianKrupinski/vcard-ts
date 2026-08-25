@@ -1,5 +1,5 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
-import { decodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
+import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
 
 export class VPropertyOrganizationValue {
 
@@ -19,7 +19,9 @@ export class VPropertyOrganizationValue {
 	}
 
 	serialize(): string {
-		return `${this._name};${this._unit}`
+		return [this._name, this._unit ?? '']
+			.map(encodePropertyValue)
+			.join(';')
 	}
 
 	type(): string {
