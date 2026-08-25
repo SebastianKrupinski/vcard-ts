@@ -119,6 +119,9 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 		return new VPropertyBase('', decodePropertyValue(rawValue), group, params)
 	}
 	const PropertyType = knownProperties[name.toUpperCase()]
+	if (PropertyType === VPropertyBase) {
+		return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
+	}
 	if (PropertyType) {
 		return new PropertyType(name, rawValue, group, params)
 	}
