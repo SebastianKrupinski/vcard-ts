@@ -14,6 +14,14 @@ export class VPropertyDateValue {
 
 	deserialize(value: string): VPropertyDateValue {
 		// possible formats: 19850412, 1985-04, 1985, --0412, ---12
+		const dayOnly = value.match(/^---(\d{2})$/)
+		if (dayOnly) {
+			this._year = null
+			this._month = null
+			this._day = parseInt(dayOnly[1])
+			return this
+		}
+
 		const regex = /^(\d{4}|--)?-?(\d{2})?-?(\d{2})?$/
 		const match = value.match(regex)
 		if (match) {

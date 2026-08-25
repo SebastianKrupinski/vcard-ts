@@ -217,4 +217,20 @@ describe('property deserialization', () => {
       data: 'first,second,third',
     })
   })
+
+  it('deserializes a reduced date containing only a day', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'BDAY:---12',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.birthDay?.value).toMatchObject({
+      year: null,
+      month: null,
+      day: 12,
+    })
+  })
 })
