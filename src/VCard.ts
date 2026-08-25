@@ -62,13 +62,18 @@ export function deserializeCard(data: string): VCard {
 		properties.push(prop)
 	}
 
-	const versionValue = properties.find(property => property.name.toUpperCase() === 'VERSION')?.value
-	const version = typeof versionValue === 'string'
-		&& Object.values(VCardPropertyVersionValues).includes(versionValue as VCardPropertyVersionValues)
-		? versionValue as VCardPropertyVersionValues
-		: VCardPropertyVersionValues.V3_0
+	const versionProperties = properties.filter(property => property.name.toUpperCase() === 'VERSION')
+	if (versionProperties.length !== 1) {
+		throw new Error(`Invalid vCard data: expected exactly one VERSION property, found ${versionProperties.length}`)
+	}
 
-	return new VCard(version, properties)
+	const versionValue = versionProperties[0].value
+	if (typeof versionValue !== 'string'
+		|| !Object.values(VCardPropertyVersionValues).includes(versionValue as VCardPropertyVersionValues)) {
+		throw new Error(`Invalid vCard data: unsupported VERSION value ${String(versionValue)}`)
+	}
+
+	return new VCard(versionValue as VCardPropertyVersionValues, properties)
 }
 
 /**

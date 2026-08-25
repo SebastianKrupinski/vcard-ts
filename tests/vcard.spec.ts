@@ -46,4 +46,31 @@ describe('vCard deserialization', () => {
       'FN:Jane Doe',
     ].join('\r\n'))).toThrow('missing END:VCARD')
   })
+
+  it('rejects a missing VERSION property', () => {
+    expect(() => deserializeCard([
+      'BEGIN:VCARD',
+      'FN:Jane Doe',
+      'END:VCARD',
+    ].join('\r\n'))).toThrow('expected exactly one VERSION property, found 0')
+  })
+
+  it('rejects duplicate VERSION properties', () => {
+    expect(() => deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'END:VCARD',
+    ].join('\r\n'))).toThrow('expected exactly one VERSION property, found 2')
+  })
+
+  it('rejects an unsupported VERSION value', () => {
+    expect(() => deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:5.0',
+      'FN:Jane Doe',
+      'END:VCARD',
+    ].join('\r\n'))).toThrow('unsupported VERSION value 5.0')
+  })
 })
