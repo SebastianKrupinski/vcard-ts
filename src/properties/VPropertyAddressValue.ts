@@ -1,5 +1,5 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
-import { decodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
+import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
 
 export class VPropertyAddressValue {
 
@@ -52,6 +52,7 @@ export class VPropertyAddressValue {
 			this._country,
 		]
 		.map((part) => (part === null ? '' : part))
+		.map(encodePropertyValue)
 		.join(';')
 	}
 

@@ -6,6 +6,7 @@ import {
   splitPropertyValue,
 } from '../../src/codecs/propertyValue'
 import { VPropertyNameValue } from '../../src/properties/VPropertyNameValue'
+import { VPropertyAddressValue } from '../../src/properties/VPropertyAddressValue'
 
 describe('property value codec', () => {
   it('encodes and decodes text escape sequences', () => {
@@ -33,5 +34,20 @@ describe('property value codec', () => {
     const name = new VPropertyNameValue('Doe;Sr.', 'Jane, Marie')
 
     expect(name.serialize()).toBe('Doe\\;Sr.;Jane\\, Marie;;;')
+  })
+
+  it('encodes structured address components before joining them', () => {
+    const address = new VPropertyAddressValue(
+      undefined,
+      undefined,
+      '123 Main; Unit 4',
+      'Toronto, GTA',
+      undefined,
+      undefined,
+      'Canada',
+    )
+
+    expect(address.serialize())
+      .toBe(';;123 Main\\; Unit 4;Toronto\\, GTA;;;Canada')
   })
 })
