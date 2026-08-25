@@ -233,4 +233,16 @@ describe('property deserialization', () => {
       day: 12,
     })
   })
+
+  it('decodes temporal properties declared as text', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'BDAY;VALUE=text:Spring\\, 1985',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.birthDay?.value).toBe('Spring, 1985')
+  })
 })
