@@ -1,0 +1,5 @@
+BEGIN:VCARD
+VERSION:4.0
+FN:Doe\, Jane
+NOTE:Line one\nLine two\; with a semicolon\, and a comma
+END:VCARD

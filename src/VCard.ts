@@ -62,7 +62,13 @@ export function deserializeCard(data: string, options?: {}): VCardObject {
 		properties.push(prop)
 	}
 
-	return new VCardObject(VCardPropertyVersionValues.V3_0, properties)
+	const versionValue = properties.find(property => property.name.toUpperCase() === 'VERSION')?.value
+	const version = typeof versionValue === 'string'
+		&& Object.values(VCardPropertyVersionValues).includes(versionValue as VCardPropertyVersionValues)
+		? versionValue as VCardPropertyVersionValues
+		: VCardPropertyVersionValues.V3_0
+
+	return new VCardObject(version, properties)
 }
 
 /**
