@@ -41,11 +41,12 @@ export function deserialize(data: string): VCard[] {
  */
 export function deserializeCard(data: string): VCard {
 	data = data.trim()
+	const boundaryLines = normalizeNewlines(data).split('\n')
 	// sanity check - for start tag and end tag
-	if (!/^BEGIN:VCARD/gmiu.test(data)) {
+	if (boundaryLines[0]?.toUpperCase() !== 'BEGIN:VCARD') {
 		throw new Error('Invalid vCard data: missing BEGIN:VCARD')
 	}
-	if (!/^END:VCARD$/gmiu.test(data)) {
+	if (boundaryLines.at(-1)?.toUpperCase() !== 'END:VCARD') {
 		throw new Error('Invalid vCard data: missing END:VCARD')
 	}
 

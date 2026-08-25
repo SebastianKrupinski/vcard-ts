@@ -47,6 +47,16 @@ describe('vCard deserialization', () => {
     ].join('\r\n'))).toThrow('missing END:VCARD')
   })
 
+  it('rejects content before the BEGIN marker', () => {
+    expect(() => deserializeCard(`unexpected\r\n${SINGLE}`))
+      .toThrow('missing BEGIN:VCARD')
+  })
+
+  it('rejects content after the END marker', () => {
+    expect(() => deserializeCard(`${SINGLE}\r\nunexpected`))
+      .toThrow('missing END:VCARD')
+  })
+
   it('rejects a missing VERSION property', () => {
     expect(() => deserializeCard([
       'BEGIN:VCARD',
