@@ -39,6 +39,19 @@ describe('vCard deserialization', () => {
     expect(card.formattedName?.value).toBe('JaneDoe')
   })
 
+  it('ignores blank lines inside a card', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      '',
+      'FN:Jane Doe',
+      '',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.formattedName?.value).toBe('Jane Doe')
+  })
+
   it('rejects a card without an END marker', () => {
     expect(() => deserializeCard([
       'BEGIN:VCARD',

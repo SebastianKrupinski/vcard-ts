@@ -55,6 +55,7 @@ export function deserializeCard(data: string): VCard {
 
 	for (const rawLine of lines) {
 		const line = rawLine.trimEnd()
+		if (line.length === 0) continue
 		if (/^BEGIN:/i.test(line) || /^END:/i.test(line)) continue
 
 		const prop = deserializeProperty(line)
