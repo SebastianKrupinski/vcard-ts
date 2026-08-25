@@ -1,19 +1,21 @@
 import { VParameterCollection, VParameterObject } from './parameters/VParameterObject'
+import { decodeParameterValue } from './codecs/parameterValue'
+import { decodePropertyValue } from './codecs/propertyValue'
+import { normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
 import { VPropertyBase } from './properties/VPropertyBase'
 import { VCardPropertyVersionValues } from './VCardInterfaces'
-import { VCardObject } from './VCardObjects'
+import { VCard } from './VCardObjects'
 import { knownProperties } from './properties/VPropertyTypes'
-import { VPropertyTextType } from './properties/VPropertyTextType'
 import { VPropertyCollection } from './properties/VPropertyCollection'
 
 /**
  *
  * @param data
  */
-export function deserialize(data: string, options?: {}): VCardObject[] {
+export function deserialize(data: string): VCard[] {
 
 	// sanity check - for minimal vCard length
-	// (BEGIN:VCARD\nVERSION:2.1\nFN:a\nEND:VCARD)
+	// (BEGIN:VCARD\nVERSION:4.0\nFN:a\nEND:VCARD)
 	if (data.length < 30) {
 		throw new Error('Invalid input data: length too short')
 	}
@@ -25,7 +27,7 @@ export function deserialize(data: string, options?: {}): VCardObject[] {
 	if (!dataBlocks) {
 		throw new Error('Invalid input data: no cards found')
 	}
-	const cardCollection: VCardObject[] = []
+	const cardCollection: VCard[] = []
 	// parse each card
 	dataBlocks.forEach((dataBlock, index) => {
 		const vCard = deserializeCard(dataBlock)
@@ -39,22 +41,27 @@ export function deserialize(data: string, options?: {}): VCardObject[] {
  * Throws if the payload is invalid or not a single VCARD.
  * @param data
  */
-export function deserializeCard(data: string, options?: {}): VCardObject {
+export function deserializeCard(data: string): VCard {
 	data = data.trim()
+	const boundaryLines = normalizeNewlines(data).split('\n')
 	// sanity check - for start tag and end tag
-	if (!/^BEGIN:VCARD/gmiu.test(data)) {
+	if (boundaryLines[0]?.toUpperCase() !== 'BEGIN:VCARD') {
 		throw new Error('Invalid vCard data: missing BEGIN:VCARD')
 	}
-	if (!/^END:VCARD$/gmiu.test(data)) {
+	if (boundaryLines.at(-1)?.toUpperCase() !== 'END:VCARD') {
 		throw new Error('Invalid vCard data: missing END:VCARD')
 	}
 
-	const lines = unfoldLine(data)
+	const lines = unfoldContentLines(data)
 	const properties = new VPropertyCollection()
 
-	for (const rawLine of lines) {
+	for (const [index, rawLine] of lines.entries()) {
 		const line = rawLine.trimEnd()
-		if (/^BEGIN:/i.test(line) || /^END:/i.test(line)) continue
+		if (line.length === 0) continue
+		if (index === 0 || index === lines.length - 1) continue
+		if (/^(BEGIN|END):VCARD$/i.test(line)) {
+			throw new Error('Invalid vCard data: nested card marker')
+		}
 
 		const prop = deserializeProperty(line)
 		if (!prop) continue
@@ -62,13 +69,18 @@ export function deserializeCard(data: string, options?: {}): VCardObject {
 		properties.push(prop)
 	}
 
-	const versionValue = properties.find(property => property.name.toUpperCase() === 'VERSION')?.value
-	const version = typeof versionValue === 'string'
-		&& Object.values(VCardPropertyVersionValues).includes(versionValue as VCardPropertyVersionValues)
-		? versionValue as VCardPropertyVersionValues
-		: VCardPropertyVersionValues.V3_0
+	const versionProperties = properties.filter(property => property.name.toUpperCase() === 'VERSION')
+	if (versionProperties.length !== 1) {
+		throw new Error(`Invalid vCard data: expected exactly one VERSION property, found ${versionProperties.length}`)
+	}
 
-	return new VCardObject(version, properties)
+	const versionValue = versionProperties[0].value
+	if (typeof versionValue !== 'string'
+		|| !Object.values(VCardPropertyVersionValues).includes(versionValue as VCardPropertyVersionValues)) {
+		throw new Error(`Invalid vCard data: unsupported VERSION value ${String(versionValue)}`)
+	}
+
+	return new VCard(versionValue as VCardPropertyVersionValues, properties)
 }
 
 /**
@@ -79,7 +91,6 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 	let name: string | null = null
 	let group: string | null = null
 	const params = new VParameterCollection()
-	let value: string | null = null
 	let remaining: string
 	// extract the property name and group (if any)
 	({ name, group, remaining } = extractPropertyHeader(data))
@@ -89,22 +100,28 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 		// Strip the leading semicolon and extract the next parameter
 		remaining = remaining.substring(1)
 		result = extractPropertyParameter(remaining)
-		// if no parameter found, break to avoid infinite loop
-		if (!result) break
+		if (!result) {
+			throw new Error(`Invalid property parameter: ${data}`)
+		}
 		remaining = result?.remainder.trimStart()
-		params[result.name] = new VParameterObject(result.name, result.value ?? decodeValue(result.value))
+		const parameterName = result.name.toUpperCase()
+		const rawParameterValue = result.value.startsWith('"') && result.value.endsWith('"')
+			? result.value.slice(1, -1)
+			: result.value
+		const parameterValue = decodeParameterValue(rawParameterValue)
+		params[parameterName] = new VParameterObject(parameterName, parameterValue)
 	}
 	// the remaining part should start with ':', followed by the value
-	value = decodeValue(remaining.slice(1))
+	const rawValue = remaining.slice(1)
 	// instantiate the property object
 	if (!name) {
-		return new VPropertyBase('', value ?? '', group, params)
+		return new VPropertyBase('', decodePropertyValue(rawValue), group, params)
 	}
 	const PropertyType = knownProperties[name.toUpperCase()]
 	if (PropertyType) {
-		return new PropertyType(name, value, group, params)
+		return new PropertyType(name, rawValue, group, params)
 	}
-	return new VPropertyBase(name, value, group, params)
+	return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
 }
 
 /**
@@ -120,7 +137,7 @@ function extractPropertyHeader(data: string, options?: {}): { name: string; grou
 	const remaining = data.slice(header.length) // +1 to skip the ':' or ';'
 	let propertyName: string | null = null
 	let propertyGroup: string | null = null
-	if (header.indexOf('.') > 1) {
+	if (header.indexOf('.') >= 1) {
 		[propertyGroup, propertyName] = header.split('.', 2)
 	} else {
 		propertyName = header
@@ -160,137 +177,22 @@ function extractPropertyParameter(data: string): { name: string; value: string; 
 }
 
 /**
- *
- * @param data
- */
-function normalizeNewlines(data: string): string {
-	return data.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-}
-
-/**
- *
- * @param v
- */
-function decodeValue(v: string): string {
-	return v
-		.replace(/\\n/gi, '\n')
-		.replace(/\\,/g, ',')
-		.replace(/\\;/g, ';')
-		.replace(/\\\\/g, '\\')
-}
-
-/**
- *
- * @param v
- */
-function encodeValue(v: string): string {
-	return v
-		.replace(/\\/g, '\\\\')
-		.replace(/\n/g, '\\n')
-		.replace(/,/g, '\\,')
-		.replace(/;/g, '\\;')
-}
-
-/**
- *
- * @param text
- * @param sep
- */
-function splitOutsideQuotes(text: string, sep: string): string[] {
-	const out: string[] = []
-	let current = ''
-	let inQuotes = false
-	for (let i = 0; i < text.length; i++) {
-		const ch = text[i]
-		if (ch === '"') {
-			inQuotes = !inQuotes
-			continue
-		}
-		if (!inQuotes && ch === sep) {
-			out.push(current)
-			current = ''
-		} else {
-			current += ch
-		}
-	}
-	out.push(current)
-	return out
-}
-
-/**
- *
- * @param params
- * @param keepTypeQuotes
- */
-function encodeParams(params: Record<string, string[]>, keepTypeQuotes = false): string {
-	const out: string[] = []
-	for (const [k, values] of Object.entries(params)) {
-		const key = k.toUpperCase()
-		if (!values || values.length === 0) {
-			out.push(key)
-			continue
-		}
-		const encoded = values.map(v => {
-			const needsQuotes = /[,:;]/.test(v)
-			if (!keepTypeQuotes && key === 'TYPE') return v
-			return needsQuotes ? '"' + v + '"' : v
-		}).join(',')
-		out.push(`${key}=${encoded}`)
-	}
-	return out.join(';')
-}
-
-/**
- *
- * @param line
- * @param newline
- */
-function foldLine(line: string, newline: string): string {
-	const limit = 75
-	if (line.length <= limit) return line
-	const parts: string[] = []
-	let i = 0
-	while (i < line.length) {
-		parts.push(line.slice(i, i + limit))
-		i += limit
-	}
-	return parts.join(newline + ' ')
-}
-
-/**
- *
- * @param input
- */
-function unfoldLine(input: string): string[] {
-	const lines = normalizeNewlines(input).split('\n')
-	const output: string[] = []
-	for (const line of lines) {
-		if ((line.startsWith(' ') || line.startsWith('\t')) && output.length > 0) {
-			output[output.length - 1] += line.slice(1)
-		} else {
-			output.push(line)
-		}
-	}
-	return output
-}
-
-/**
  * Utility to create an empty vCard skeleton (vCard 3.0 or 4.0)
  *
  * @param version
  */
-export function createEmptyVCard(version: '3.0' | '4.0' = '4.0'): VCardObject {
+export function createCard(version: '3.0' | '4.0' = '4.0'): VCard {
 	let v: VCardPropertyVersionValues
 	if (typeof version === 'string') {
 		v = VCardPropertyVersionValues[('V' + version.replace('.', '_')) as keyof typeof VCardPropertyVersionValues] ?? VCardPropertyVersionValues.V3_0
 	} else {
 		v = version
 	}
-	return new VCardObject(v, new VPropertyCollection())
+	return new VCard(v, new VPropertyCollection())
 }
 
 export default {
+	createCard,
 	deserialize,
 	deserializeCard,
-	createEmptyVCard,
 }

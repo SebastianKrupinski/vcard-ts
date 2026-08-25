@@ -1,4 +1,5 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
+import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
 
 export class VPropertyAddressValue {
 
@@ -29,7 +30,7 @@ export class VPropertyAddressValue {
 	}
 
 	deserialize(value: string): VPropertyAddressValue {
-		const parts = value.split(';')
+		const parts = splitPropertyValue(value, ';').map(decodePropertyValue)
 		this._poBox = parts[0] || null
 		this._extended = parts[1] || null
 		this._street = parts[2] || null
@@ -51,6 +52,7 @@ export class VPropertyAddressValue {
 			this._country,
 		]
 		.map((part) => (part === null ? '' : part))
+		.map(encodePropertyValue)
 		.join(';')
 	}
 

@@ -1,5 +1,6 @@
 import { VParameterCollectionInterface } from '../parameters/VParameterInterfaces'
 import { VPropertyBase } from './VPropertyBase'
+import { decodePropertyValue } from '../codecs/propertyValue'
 
 export class VPropertyTextType extends VPropertyBase<string> {
 
@@ -9,7 +10,7 @@ export class VPropertyTextType extends VPropertyBase<string> {
 	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
-		super(name, value, group, params)
+		super(name, value === undefined ? undefined : decodePropertyValue(value), group, params)
 	}
 
 }

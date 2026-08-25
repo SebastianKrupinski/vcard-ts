@@ -1,4 +1,5 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
+import { decodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
 
 export class VPropertyGenderValue {
 
@@ -11,7 +12,7 @@ export class VPropertyGenderValue {
 	}
 
 	deserialize(value: string): VPropertyGenderValue {
-		const [sex, identity] = value.split(';')
+		const [sex, identity] = splitPropertyValue(value, ';').map(decodePropertyValue)
 		this._sex = sex || ''
 		this._identity = identity || undefined
 		return this

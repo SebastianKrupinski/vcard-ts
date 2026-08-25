@@ -31,14 +31,14 @@ describe('property deserialization', () => {
     expect(card.name).toBeInstanceOf(VPropertyNameType)
     expect(card.addresses).toEqual([expect.any(VPropertyAddressType)])
     expect(card.telephones).toEqual([expect.any(VPropertyUriType)])
-    expect(card.fetch('ORG')).toBeInstanceOf(VPropertyOrganizationType)
-    expect(card.fetch('URL')).toBeInstanceOf(VPropertyUriType)
+    expect(card.first('ORG')).toBeInstanceOf(VPropertyOrganizationType)
+    expect(card.first('URL')).toBeInstanceOf(VPropertyUriType)
   })
 
   it('deserializes structured name and address values', () => {
     const card = deserializeCard(CARD)
     const name = card.name?.value
-    const address = card.fetch('ADR')
+    const address = card.first('ADR')
 
     expect(name).toMatchObject({
       family: 'Doe',
@@ -49,7 +49,6 @@ describe('property deserialization', () => {
     })
 
     expect(address).not.toBeNull()
-    expect(Array.isArray(address)).toBe(false)
     if (!(address instanceof VPropertyAddressType)) return
 
     expect(address.value).toMatchObject({
@@ -67,10 +66,200 @@ describe('property deserialization', () => {
   })
 
   it('preserves unknown extensions as generic properties', () => {
-    const custom = deserializeCard(CARD).fetch('X-CUSTOM')
+    const custom = deserializeCard(CARD).first('X-CUSTOM')
 
     expect(custom).toBeInstanceOf(VPropertyBase)
     expect(custom?.constructor).toBe(VPropertyBase)
-    expect(Array.isArray(custom) ? null : custom?.value).toBe('custom value')
+    expect(custom?.value).toBe('custom value')
+  })
+
+  it('distinguishes escaped newlines from literal backslash text', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'NOTE:Line one\\nLine two',
+      'X-LITERAL:Literal\\\\n text',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('NOTE')?.value).toBe('Line one\nLine two')
+    expect(card.first('X-LITERAL')?.value).toBe('Literal\\n text')
+  })
+
+  it('preserves escaped separators in structured names', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'N:Doe\\;Sr.;Jane\\, Marie;;;',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.name?.value).toMatchObject({
+      family: 'Doe;Sr.',
+      given: 'Jane, Marie',
+    })
+  })
+
+  it('preserves escaped separators in structured addresses', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'ADR:;;123 Main St\\; Unit 4;Toronto;ON;M5V 1A1;Canada',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.addresses[0]?.value).toMatchObject({
+      street: '123 Main St; Unit 4',
+      locality: 'Toronto',
+      region: 'ON',
+    })
+  })
+
+  it('preserves escaped separators in organization values', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'ORG:Example\\; Holdings;Research\\, Development',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    const organization = card.first('ORG')
+
+    expect(organization?.value).toMatchObject({
+      name: 'Example; Holdings',
+      unit: 'Research, Development',
+    })
+  })
+
+  it('preserves escaped separators in gender identity values', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'GENDER:F;non-binary\\; femme',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.gender?.value).toMatchObject({
+      sex: 'F',
+      identity: 'non-binary; femme',
+    })
+  })
+
+  it('deserializes comma-separated text collections', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'NICKNAME:Jane,J.D.\\, Junior',
+      'CATEGORIES:Friend,Research\\, Development',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('NICKNAME')?.value).toEqual(['Jane', 'J.D., Junior'])
+    expect(card.first('CATEGORIES')?.value).toEqual(['Friend', 'Research, Development'])
+  })
+
+  it('preserves URI content after the first colon', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'URL:https://example.com:8443/profile',
+      'TEL:12345',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('URL')?.value).toMatchObject({
+      scheme: 'https',
+      reference: '//example.com:8443/profile',
+    })
+    expect(card.first('TEL')?.value).toMatchObject({
+      scheme: '',
+      reference: '12345',
+    })
+  })
+
+  it.each([
+    ['3.0', '43.6532;-79.3832'],
+    ['4.0', 'geo:43.6532,-79.3832'],
+  ])('deserializes vCard %s geographic coordinates', (version, value) => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      `VERSION:${version}`,
+      'FN:Toronto',
+      `GEO:${value}`,
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('GEO')?.value).toMatchObject({
+      latitude: 43.6532,
+      longitude: -79.3832,
+    })
+  })
+
+  it('preserves metadata and commas in data URI payloads', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'PHOTO:data:text/plain;charset=utf-8;base64,first,second,third',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('PHOTO')?.value).toMatchObject({
+      format: 'text/plain',
+      encoding: 'charset=utf-8;base64',
+      data: 'first,second,third',
+    })
+  })
+
+  it('deserializes a reduced date containing only a day', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'BDAY:---12',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.birthDay?.value).toMatchObject({
+      year: null,
+      month: null,
+      day: 12,
+    })
+  })
+
+  it('decodes temporal properties declared as text', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'BDAY;VALUE=text:Spring\\, 1985',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.birthDay?.value).toBe('Spring, 1985')
+  })
+
+  it('deserializes time-only values with a leading T', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'BDAY:T102200-0800',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.birthDay?.value).toMatchObject({
+      hour: 10,
+      minute: 22,
+      second: 0,
+      offset: -480,
+    })
   })
 })

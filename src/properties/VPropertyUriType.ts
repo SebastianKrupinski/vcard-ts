@@ -15,7 +15,7 @@ export class VPropertyUriType extends VPropertyBase<VPropertyUriValue|VPropertyU
 		if (typeof value === 'string') {
 			if (value.startsWith('data:')) {
 				value = new VPropertyUriDataValue().deserialize(value)
-			} else if (value.startsWith('geo:')) {
+			} else if (name.toUpperCase() === 'GEO' || value.startsWith('geo:')) {
 				value = new VPropertyUriGeoValue().deserialize(value)
 			} else {
 				value = new VPropertyUriValue().deserialize(value)

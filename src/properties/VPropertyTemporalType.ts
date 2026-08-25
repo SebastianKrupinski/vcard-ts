@@ -4,6 +4,7 @@ import { VPropertyBase } from './VPropertyBase'
 import { VPropertyDateTimeValue } from './VPropertyDateTimeValue'
 import { VPropertyDateValue } from './VPropertyDateValue'
 import { VPropertyTimeValue } from './VPropertyTimeValue'
+import { decodePropertyValue } from '../codecs/propertyValue'
 
 export class VPropertyTemporalType extends VPropertyBase<VPropertyDateValue|VPropertyTimeValue|VPropertyDateTimeValue|string> {
 
@@ -37,6 +38,8 @@ export class VPropertyTemporalType extends VPropertyBase<VPropertyDateValue|VPro
 				value = new VPropertyDateValue().deserialize(value)
 			} else if (format === 'time') {
 				value = new VPropertyTimeValue().deserialize(value)
+			} else {
+				value = decodePropertyValue(value)
 			}
 		}
 		super(name, value, group, params)
