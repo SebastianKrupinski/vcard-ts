@@ -72,4 +72,18 @@ describe('property deserialization', () => {
     expect(custom?.constructor).toBe(VPropertyBase)
     expect(custom?.value).toBe('custom value')
   })
+
+  it('distinguishes escaped newlines from literal backslash text', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'NOTE:Line one\\nLine two',
+      'X-LITERAL:Literal\\\\n text',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('NOTE')?.value).toBe('Line one\nLine two')
+    expect(card.first('X-LITERAL')?.value).toBe('Literal\\n text')
+  })
 })

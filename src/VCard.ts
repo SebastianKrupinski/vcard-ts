@@ -183,12 +183,25 @@ function normalizeNewlines(data: string): string {
  *
  * @param v
  */
-function decodeValue(v: string): string {
-	return v
-		.replace(/\\n/gi, '\n')
-		.replace(/\\,/g, ',')
-		.replace(/\\;/g, ';')
-		.replace(/\\\\/g, '\\')
+function decodeValue(value: string): string {
+	let decoded = ''
+	for (let index = 0; index < value.length; index++) {
+		const character = value[index]
+		if (character !== '\\' || index === value.length - 1) {
+			decoded += character
+			continue
+		}
+
+		const escaped = value[++index]
+		if (escaped.toLowerCase() === 'n') {
+			decoded += '\n'
+		} else if (escaped === '\\' || escaped === ',' || escaped === ';') {
+			decoded += escaped
+		} else {
+			decoded += `\\${escaped}`
+		}
+	}
+	return decoded
 }
 
 /**
