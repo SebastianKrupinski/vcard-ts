@@ -1,10 +1,10 @@
 import { VParameterCollection, VParameterObject } from './parameters/VParameterObject'
 import { decodeParameterValue, encodeParameters } from './codecs/parameterValue'
 import { decodePropertyValue, encodePropertyValue } from './codecs/propertyValue'
-import { normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
+import { foldContentLine, normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
 import { VPropertyBase } from './properties/VPropertyBase'
 import type { VPropertyBaseInterface } from './properties/VPropertyInterfaces'
-import { VCardPropertyVersionValues } from './VCardInterfaces'
+import { VCardInterface, VCardPropertyVersionValues } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
 import { knownProperties } from './properties/VPropertyTypes'
 import { VPropertyCollection } from './properties/VPropertyCollection'
@@ -146,6 +146,25 @@ function serializePropertyValue(value: unknown): string {
 	return String(value)
 }
 
+export function serialize(cards: VCardInterface | VCardInterface[]): string {
+	return (Array.isArray(cards) ? cards : [cards])
+		.map(serializeCard)
+		.join('')
+}
+
+function serializeCard(card: VCardInterface): string {
+	const lines = [
+		'BEGIN:VCARD',
+		`VERSION:${card.version}`,
+		...card.properties
+			.filter(property => property.name.toUpperCase() !== 'VERSION')
+			.map(property => foldContentLine(serializeProperty(property))),
+		'END:VCARD',
+	]
+
+	return `${lines.join('\r\n')}\r\n`
+}
+
 /**
  *
  * @param data
@@ -217,4 +236,5 @@ export default {
 	createCard,
 	deserialize,
 	deserializeCard,
+	serialize,
 }

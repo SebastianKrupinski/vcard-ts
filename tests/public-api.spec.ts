@@ -4,7 +4,9 @@ import {
   createCard,
   deserialize,
   deserializeCard,
+  serialize,
   VCard,
+  VCardPropertyVersionValues,
   VPropertyTextType,
 } from '../src'
 
@@ -21,6 +23,27 @@ describe('public API', () => {
   it('exposes canonical single-card and multi-card deserializers', () => {
     expect(deserializeCard(CARD)).toBeInstanceOf(VCard)
     expect(deserialize(`${CARD}\r\n${CARD}`)).toHaveLength(2)
+  })
+
+  it('serializes a card with its authoritative version and CRLF lines', () => {
+    const card = deserializeCard(CARD)
+    card.version = VCardPropertyVersionValues.V3_0
+
+    expect(serialize(card)).toBe([
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'FN:Primary Name',
+      'EMAIL:first@example.com',
+      'EMAIL:second@example.com',
+      'END:VCARD',
+      '',
+    ].join('\r\n'))
+  })
+
+  it('serializes the card array returned by deserialize', () => {
+    const cards = deserialize(`${CARD}\r\n${CARD}`)
+
+    expect(serialize(cards)).toBe(`${CARD}\r\n${CARD}\r\n`)
   })
 
   it('provides predictable first and all property accessors', () => {
