@@ -16,6 +16,7 @@ export class VPropertyTimeValue {
 
 	deserialize(value: string): VPropertyTimeValue {
 		// possible formats: 102200, 1022, 10, -2200, --00, 102200Z, 102200-0800
+		if (value.startsWith('T')) value = value.slice(1)
 		const regex = /^(\d{2})?(\d{2})?(\d{2})?(Z|([+-]\d{4}))?$/
 		const match = value.match(regex)
 		if (match) {

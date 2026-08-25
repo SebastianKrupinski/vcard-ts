@@ -245,4 +245,21 @@ describe('property deserialization', () => {
 
     expect(card.birthDay?.value).toBe('Spring, 1985')
   })
+
+  it('deserializes time-only values with a leading T', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'BDAY:T102200-0800',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.birthDay?.value).toMatchObject({
+      hour: 10,
+      minute: 22,
+      second: 0,
+      offset: -480,
+    })
+  })
 })
