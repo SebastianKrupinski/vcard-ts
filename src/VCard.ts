@@ -92,7 +92,11 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 		// if no parameter found, break to avoid infinite loop
 		if (!result) break
 		remaining = result?.remainder.trimStart()
-		params[result.name] = new VParameterObject(result.name, result.value ?? decodeValue(result.value))
+		const parameterName = result.name.toUpperCase()
+		const parameterValue = result.value.startsWith('"') && result.value.endsWith('"')
+			? result.value.slice(1, -1)
+			: result.value
+		params[parameterName] = new VParameterObject(parameterName, parameterValue)
 	}
 	// the remaining part should start with ':', followed by the value
 	value = decodeValue(remaining.slice(1))

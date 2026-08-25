@@ -50,4 +50,18 @@ describe('parameter deserialization', () => {
     expect(card.formattedName?.params).toEqual({})
     expect(card.formattedName?.hasParams).toBe(false)
   })
+
+  it('normalizes parameter names and removes surrounding quotes', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'EMAIL;type="WORK,VOICE":jane@example.com',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.first('EMAIL')?.params.TYPE).toEqual({
+      name: 'TYPE',
+      value: 'WORK,VOICE',
+    })
+  })
 })
