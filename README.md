@@ -5,6 +5,18 @@ Typed vCard deserialization, editing, and serialization for TypeScript.
 The library supports vCard 3.0 and 4.0. It preserves property order, groups,
 parameters, escaped text, extension properties, and folded content lines.
 
+## Supported formats
+
+- vCard 3.0 from RFC 2426, including legacy inline binary media and `AGENT`
+- vCard 4.0 from RFC 6350
+- Registered properties from RFC 6474, RFC 6715, RFC 8605, RFC 9554, and
+  RFC 9555
+
+vCard 2.1 is intentionally unsupported. The `N` and `ADR` APIs expose one
+string per structured component, and vCard 3.0 `AGENT` values are exposed as
+text. Unknown and extension properties are preserved with the generic property
+type.
+
 ## Usage
 
 ```ts
