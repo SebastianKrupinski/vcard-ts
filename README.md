@@ -1,86 +1,91 @@
 # vcard-ts
 
-Typed vCard deserialization, editing, and serialization for TypeScript.
+A typed TypeScript library for reading, editing, and serializing vCard 3.0 and
+4.0 data.
 
-The library supports vCard 3.0 and 4.0. It preserves property order, groups,
-parameters, escaped text, extension properties, and folded content lines.
+`vcard-ts` turns known vCard properties into typed property and value models.
+It also preserves property order, groups, parameters, extension properties,
+and escaped text, while supporting folded content lines.
 
-## Supported formats
+## Quick start
 
-- vCard 3.0 from RFC 2426, including legacy inline binary media and `AGENT`
-- vCard 4.0 from RFC 6350
-- Registered properties from RFC 6474, RFC 6715, RFC 8605, RFC 9554, and
-  RFC 9555
-
-vCard 2.1 is intentionally unsupported. The `N` and `ADR` APIs expose one
-string per structured component, and vCard 3.0 `AGENT` values are exposed as
-text. Unknown and extension properties are preserved with the generic property
-type.
-
-## Usage
+`deserialize` reads every vCard in a string and returns an array. The same
+array can be passed directly to `serialize` after it has been inspected or
+edited.
 
 ```ts
 import { deserialize, serialize } from 'vcard-ts'
 
-const cards = deserialize(vcardText)
-const firstCard = cards[0]
+const input = [
+  'BEGIN:VCARD',
+  'VERSION:4.0',
+  'FN:Jane Doe',
+  'N:Doe;Jane;;;',
+  'EMAIL;TYPE=work:jane@example.com',
+  'END:VCARD',
+].join('\r\n')
 
-console.log(firstCard.formattedName?.value)
+const cards = deserialize(input)
+const card = cards[0]
+
+console.log(card.formattedName?.value) // Jane Doe
+console.log(card.emails[0]?.value)     // jane@example.com
 
 const output = serialize(cards)
 ```
 
-Use `deserializeCard` when the input must contain exactly one vCard:
+Use `deserializeCard` when the input must contain exactly one card:
 
 ```ts
 import { deserializeCard } from 'vcard-ts'
 
-const card = deserializeCard(vcardText)
+const card = deserializeCard(input)
 ```
 
-Create and serialize a new card with the typed property classes:
+## Typed property getters
 
-```ts
-import { createCard, serialize, VPropertyTextType } from 'vcard-ts'
-
-const card = createCard('4.0')
-card.add(new VPropertyTextType('FN', 'Jane Doe'))
-card.add(new VPropertyTextType('EMAIL', 'jane@example.com'))
-
-const output = serialize(card)
-```
-
-`serialize` accepts either one card or the array returned by `deserialize`.
-Output uses CRLF line endings and folds content lines at 75 UTF-8 bytes.
-
-## Working with properties
+Common properties are available directly on the card. Singular properties
+return a typed property or `null`; repeatable properties return arrays.
 
 ```ts
 const formattedName = card.formattedName?.value
-const emailAddresses = card.emails.map(email => email.value)
+const name = card.name?.value
+const birthday = card.birthDay?.value
+const gender = card.gender?.value
 
-// Generic access works for every property, including extensions.
-const socialProfiles = card.all('X-SOCIALPROFILE')
-const firstCustomValue = card.first('X-CUSTOM-FIELD')
-
-card.drop('EMAIL')
+const emailAddresses = card.emails.map(property => property.value)
+const telephoneNumbers = card.telephones.map(property => property.value)
+const addresses = card.addresses.map(property => property.value)
 ```
 
-Common single-value properties are exposed through typed getters such as
-`formattedName`, `name`, `birthDay`, and `gender`. Repeatable properties use
-array getters such as `emails`, `telephones`, and `addresses`. Unknown and `X-`
-extension properties remain available through `first` and `all`, so they can
-round-trip without being discarded.
+The current named getters are:
 
-Structured properties expose typed value getters instead of requiring you to
-split their serialized text manually:
+- `prodId`, `uid`, `revision`, `kind`, `name`, and `formattedName`
+- `birthDay`, `birthPlace`, `deathDay`, `deathPlace`, `anniversary`, and
+  `gender`
+- `addresses`, `telephones`, and `emails`
+
+Other registered properties are still parsed into their appropriate property
+types and can be accessed by name.
+
+## Structured values
+
+Structured properties expose their individual fields. There is no need to
+split the raw vCard value yourself.
 
 ```ts
 const name = card.name?.value
+
+console.log(name?.prefix)
 console.log(name?.given)
+console.log(name?.additional)
 console.log(name?.family)
+console.log(name?.suffix)
 
 const address = card.addresses[0]?.value
+
+console.log(address?.poBox)
+console.log(address?.extended)
 console.log(address?.street)
 console.log(address?.locality)
 console.log(address?.region)
@@ -88,11 +93,12 @@ console.log(address?.code)
 console.log(address?.country)
 
 const gender = card.gender?.value
+
 console.log(gender?.sex)
 console.log(gender?.identity)
 ```
 
-The value fields are editable through the matching setters:
+Typed values can be edited in place before the card is serialized:
 
 ```ts
 const name = card.name?.value
@@ -104,10 +110,83 @@ if (name) {
 const address = card.addresses[0]?.value
 if (address) {
   address.locality = 'Toronto'
+  address.region = 'Ontario'
 }
 
 const output = serialize(card)
 ```
+
+## Generic property access
+
+Use `first` and `all` for registered properties without a named getter,
+custom properties, and `X-` extensions. Property names are matched without
+regard to case.
+
+```ts
+const firstLanguage = card.first('LANG')
+const socialProfiles = card.all('SOCIALPROFILE')
+const customValue = card.first('X-CUSTOM-FIELD')?.value
+
+if (card.has('EMAIL')) {
+  console.log('The card contains at least one email address')
+}
+```
+
+Groups and parameters remain available on each property:
+
+```ts
+const email = card.emails[0]
+
+console.log(email?.group)
+console.log(email?.params.TYPE?.value) // work
+```
+
+Remove one property by passing the property itself, or remove every property
+with a given name by passing its name:
+
+```ts
+const email = card.emails[0]
+if (email) {
+  card.drop(email)
+}
+
+card.drop('X-OBSOLETE-FIELD')
+```
+
+## Serialization
+
+`serialize` accepts one card or an array of cards, including the array returned
+by `deserialize`.
+
+```ts
+const oneCard = serialize(card)
+const everyCard = serialize(cards)
+```
+
+Serialized output uses CRLF line endings and folds content lines at 75 UTF-8
+bytes.
+
+## Supported standards
+
+- vCard 3.0 from RFC 2426
+- vCard 4.0 from RFC 6350
+- Registered properties from RFC 6474, RFC 6715, RFC 8605, RFC 9554, and
+  RFC 9555
+
+Known URI, text, temporal, media, structured-name, address, gender, geography,
+organization, and client-PID-map values are decoded into dedicated value
+models. Other registered and extension properties use the generic property
+model so they can still be read and serialized.
+
+vCard 2.1 is intentionally unsupported. The `N` and `ADR` models expose one
+string per structured component, and vCard 3.0 `AGENT` values are treated as
+text.
+
+## Validation
+
+Deserialization rejects unsupported versions and malformed card boundaries. A
+card must contain exactly one `VERSION` property and at least one `FN`
+property. A vCard 3.0 card must also contain an `N` property.
 
 ## Development
 
@@ -116,4 +195,5 @@ npm install
 npm run check
 ```
 
-`npm run check` runs the TypeScript check, test suite, and package build.
+`npm run check` runs the TypeScript check, test suite, and package build. The
+package requires Node.js 20 or newer.
