@@ -1,5 +1,6 @@
 import { VPropertyAddressType } from "./VPropertyAddressType"
 import { VPropertyBase } from "./VPropertyBase"
+import { VPropertyClientPidMapType } from "./VPropertyClientPidMapType"
 import { VPropertyGenderType } from "./VPropertyGenderType"
 import { VPropertyGeoType } from "./VPropertyGeoType"
 import { VPropertyNameType } from "./VPropertyNameType"
@@ -44,7 +45,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     REV: VPropertyTemporalType,
     SOUND: VPropertyUriType,
     UID: VPropertyUriOrTextType,
-    CLIENTPIDMAP: VPropertyBase,
+    CLIENTPIDMAP: VPropertyClientPidMapType,
     URL: VPropertyUriType,
     VERSION: VPropertyTextType,
     KEY: VPropertyUriOrTextType,

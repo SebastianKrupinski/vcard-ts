@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { knownProperties } from '../src/properties/VPropertyTypes'
 import { VPropertyBase } from '../src/properties/VPropertyBase'
+import { VPropertyClientPidMapType } from '../src/properties/VPropertyClientPidMapType'
 import { VPropertyGeoType } from '../src/properties/VPropertyGeoType'
 import { VPropertyTemporalType } from '../src/properties/VPropertyTemporalType'
 import { VPropertyTextOrUriType } from '../src/properties/VPropertyTextOrUriType'
@@ -36,8 +37,11 @@ describe('property registry', () => {
   })
 
   it('uses generic properties when no matching value type exists', () => {
-    expect(knownProperties.CLIENTPIDMAP).toBe(VPropertyBase)
     expect(knownProperties.AGENT).toBe(VPropertyBase)
+  })
+
+  it('uses the structured client PID map property', () => {
+    expect(knownProperties.CLIENTPIDMAP).toBe(VPropertyClientPidMapType)
   })
 
   it('uses mixed-value properties with their RFC default type', () => {
