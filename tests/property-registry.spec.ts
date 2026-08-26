@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { knownProperties } from '../src/properties/VPropertyTypes'
-import { VPropertyBase } from '../src/properties/VPropertyBase'
 import { VPropertyClientPidMapType } from '../src/properties/VPropertyClientPidMapType'
 import { VPropertyGeoType } from '../src/properties/VPropertyGeoType'
 import { VPropertyMediaType } from '../src/properties/VPropertyMediaType'
 import { VPropertyTemporalType } from '../src/properties/VPropertyTemporalType'
+import { VPropertyTextType } from '../src/properties/VPropertyTextType'
 import { VPropertyTextOrUriType } from '../src/properties/VPropertyTextOrUriType'
 import { VPropertyTimeZoneType } from '../src/properties/VPropertyTimeZoneType'
 import { VPropertyUriOrTextType } from '../src/properties/VPropertyUriOrTextType'
@@ -37,8 +37,8 @@ describe('property registry', () => {
       .toEqual(expect.arrayContaining([...VCARD_3_ONLY_PROPERTIES]))
   })
 
-  it('uses generic properties when no matching value type exists', () => {
-    expect(knownProperties.AGENT).toBe(VPropertyBase)
+  it('uses text for the vCard 3.0 agent property', () => {
+    expect(knownProperties.AGENT).toBe(VPropertyTextType)
   })
 
   it('uses the structured client PID map property', () => {

@@ -83,7 +83,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     PROFILE: VPropertyTextType,
     LABEL: VPropertyTextType,
     MAILER: VPropertyTextType,
-    AGENT: VPropertyBase,
+    AGENT: VPropertyTextType,
     'SORT-STRING': VPropertyTextType,
     CLASS: VPropertyTextType,
 }
