@@ -27,9 +27,11 @@ const input = [
 
 const cards = deserialize(input)
 const card = cards[0]
+const email = card.emails[0]
 
 console.log(card.formattedName?.value) // Jane Doe
-console.log(card.emails[0]?.value)     // jane@example.com
+console.log(email?.value)              // jane@example.com
+console.log(email?.params.TYPE?.value) // work
 
 const output = serialize(cards)
 ```
@@ -132,14 +134,36 @@ if (card.has('EMAIL')) {
 }
 ```
 
-Groups and parameters remain available on each property:
+## Property groups and parameters
+
+Groups and parameters remain available on each property. Parsed parameter
+names are normalized to uppercase, so the `TYPE` in
+`EMAIL;TYPE=work:jane@example.com` can be accessed directly by name:
 
 ```ts
 const email = card.emails[0]
 
-console.log(email?.group)
-console.log(email?.params.TYPE?.value) // work
+if (email) {
+  console.log(email.hasParams)         // true
+  console.log(email.params.TYPE?.name) // TYPE
+  console.log(email.params.TYPE?.value) // work
+
+  for (const parameter of Object.values(email.params)) {
+    console.log(parameter.name, parameter.value)
+  }
+}
 ```
+
+The property group is separate from its parameters:
+
+```ts
+console.log(email?.group) // null for the ungrouped email above
+```
+
+For a content line beginning with
+`item1.EMAIL;TYPE=work:jane@example.com`, `group` would be `item1`.
+
+## Removing properties
 
 Remove one property by passing the property itself, or remove every property
 with a given name by passing its name:
