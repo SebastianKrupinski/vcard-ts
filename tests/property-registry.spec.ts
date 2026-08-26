@@ -4,6 +4,7 @@ import { knownProperties } from '../src/properties/VPropertyTypes'
 import { VPropertyBase } from '../src/properties/VPropertyBase'
 import { VPropertyTemporalType } from '../src/properties/VPropertyTemporalType'
 import { VPropertyTextOrUriType } from '../src/properties/VPropertyTextOrUriType'
+import { VPropertyTimeZoneType } from '../src/properties/VPropertyTimeZoneType'
 import { VPropertyUriOrTextType } from '../src/properties/VPropertyUriOrTextType'
 import { VPropertyUriType } from '../src/properties/VPropertyUriType'
 
@@ -50,6 +51,10 @@ describe('property registry', () => {
   it('uses timestamp properties for timestamp values', () => {
     expect(knownProperties.REV).toBe(VPropertyTemporalType)
     expect(knownProperties.CREATED).toBe(VPropertyTemporalType)
+  })
+
+  it('uses the time zone property for text, URI, and UTC offset values', () => {
+    expect(knownProperties.TZ).toBe(VPropertyTimeZoneType)
   })
 
   it('uses URI properties for registered URI values', () => {

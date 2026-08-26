@@ -29,6 +29,7 @@ export const VParameterValueOptions = {
 	FLOAT: 'FLOAT',
 	LANGUAGE: 'LANGUAGE-TAG',
 	PHONE_NUMBER: 'PHONE-NUMBER',
+	UTC_OFFSET: 'UTC-OFFSET',
 	BINARY: 'BINARY',
 }
 // options - type parameter

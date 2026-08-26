@@ -7,6 +7,7 @@ import { VPropertyStringCollectionType } from "./VPropertyStringCollectionType"
 import { VPropertyTemporalType } from "./VPropertyTemporalType"
 import { VPropertyTextType } from "./VPropertyTextType"
 import { VPropertyTextOrUriType } from "./VPropertyTextOrUriType"
+import { VPropertyTimeZoneType } from "./VPropertyTimeZoneType"
 import { VPropertyUriOrTextType } from "./VPropertyUriOrTextType"
 import { VPropertyUriType } from "./VPropertyUriType"
 
@@ -28,7 +29,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     EMAIL: VPropertyTextType,
     IMPP: VPropertyUriType,
     LANG: VPropertyTextType,
-    TZ: VPropertyTextType,
+    TZ: VPropertyTimeZoneType,
     GEO: VPropertyUriType,
     TITLE: VPropertyTextType,
     ROLE: VPropertyTextType,
