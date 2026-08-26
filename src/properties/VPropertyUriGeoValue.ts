@@ -4,16 +4,18 @@ export class VPropertyUriGeoValue extends VPropertyUriValue {
 
 	private _latitude: number
 	private _longitude: number
+	private _uri: boolean
 
-	constructor(latitude: number = 0, longitude: number = 0) {
+	constructor(latitude: number = 0, longitude: number = 0, uri = true) {
 		super('geo', `${latitude};${longitude}`)
 		this._latitude = latitude
 		this._longitude = longitude
+		this._uri = uri
 	}
 
 	deserialize(value: string): VPropertyUriGeoValue {
-		const isUri = value.startsWith('geo:')
-		const coordinates = isUri
+		this._uri = /^geo:/i.test(value)
+		const coordinates = this._uri
 			? value.slice(4).split(';', 1)[0].split(',', 2)
 			: value.split(';', 2)
 		const [lat, lon] = coordinates
@@ -23,7 +25,9 @@ export class VPropertyUriGeoValue extends VPropertyUriValue {
 	}
 
 	serialize(): string {
-		return `${this._latitude};${this._longitude}`
+		return this._uri
+			? `geo:${this._latitude},${this._longitude}`
+			: `${this._latitude};${this._longitude}`
 	}
 
 	get latitude(): number {
@@ -40,6 +44,14 @@ export class VPropertyUriGeoValue extends VPropertyUriValue {
 
 	set longitude(value: number) {
 	    this._longitude = value
+	}
+
+	get uri(): boolean {
+		return this._uri
+	}
+
+	set uri(value: boolean) {
+		this._uri = value
 	}
 
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { knownProperties } from '../src/properties/VPropertyTypes'
 import { VPropertyBase } from '../src/properties/VPropertyBase'
+import { VPropertyGeoType } from '../src/properties/VPropertyGeoType'
 import { VPropertyTemporalType } from '../src/properties/VPropertyTemporalType'
 import { VPropertyTextOrUriType } from '../src/properties/VPropertyTextOrUriType'
 import { VPropertyTimeZoneType } from '../src/properties/VPropertyTimeZoneType'
@@ -55,6 +56,10 @@ describe('property registry', () => {
 
   it('uses the time zone property for text, URI, and UTC offset values', () => {
     expect(knownProperties.TZ).toBe(VPropertyTimeZoneType)
+  })
+
+  it('uses the geographic property for version-specific coordinates', () => {
+    expect(knownProperties.GEO).toBe(VPropertyGeoType)
   })
 
   it('uses URI properties for registered URI values', () => {

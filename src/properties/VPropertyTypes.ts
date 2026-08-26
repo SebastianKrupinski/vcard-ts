@@ -1,6 +1,7 @@
 import { VPropertyAddressType } from "./VPropertyAddressType"
 import { VPropertyBase } from "./VPropertyBase"
 import { VPropertyGenderType } from "./VPropertyGenderType"
+import { VPropertyGeoType } from "./VPropertyGeoType"
 import { VPropertyNameType } from "./VPropertyNameType"
 import { VPropertyOrganizationType } from "./VPropertyOrganizationType"
 import { VPropertyStringCollectionType } from "./VPropertyStringCollectionType"
@@ -30,7 +31,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     IMPP: VPropertyUriType,
     LANG: VPropertyTextType,
     TZ: VPropertyTimeZoneType,
-    GEO: VPropertyUriType,
+    GEO: VPropertyGeoType,
     TITLE: VPropertyTextType,
     ROLE: VPropertyTextType,
     LOGO: VPropertyUriType,

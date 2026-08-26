@@ -263,6 +263,7 @@ describe('property deserialization', () => {
       latitude: 43.6532,
       longitude: -79.3832,
     })
+    expect(serialize(card)).toContain(`GEO:${value}\r\n`)
   })
 
   it('preserves metadata and commas in data URI payloads', () => {
