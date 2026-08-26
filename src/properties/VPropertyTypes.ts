@@ -63,7 +63,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     'CONTACT-URI': VPropertyUriType,
 
     // RFC 9554
-    CREATED: VPropertyBase,
+    CREATED: VPropertyTemporalType,
     GRAMGENDER: VPropertyTextType,
     LANGUAGE: VPropertyTextType,
     PRONOUNS: VPropertyTextType,

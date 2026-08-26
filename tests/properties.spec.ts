@@ -7,6 +7,8 @@ import { VPropertyDateValue } from '../src/properties/VPropertyDateValue'
 import { VPropertyNameType } from '../src/properties/VPropertyNameType'
 import { VPropertyOrganizationType } from '../src/properties/VPropertyOrganizationType'
 import { VPropertyTextType } from '../src/properties/VPropertyTextType'
+import { VPropertyTemporalType } from '../src/properties/VPropertyTemporalType'
+import { VPropertyTimestampValue } from '../src/properties/VPropertyTimestampValue'
 import { VPropertyUriType } from '../src/properties/VPropertyUriType'
 import { VPropertyUriValue } from '../src/properties/VPropertyUriValue'
 
@@ -64,6 +66,33 @@ describe('property deserialization', () => {
 
     expect(birthday).toBeInstanceOf(VPropertyDateValue)
     expect(birthday).toMatchObject({ year: 1990, month: 5, day: 2 })
+  })
+
+  it('deserializes and serializes timestamp properties', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'REV:20260826T142530Z',
+      'CREATED:20240115T091500Z',
+      'END:VCARD',
+    ].join('\r\n'))
+    const created = card.first('CREATED')
+
+    expect(card.revision).toBeInstanceOf(VPropertyTemporalType)
+    expect(card.revision?.value).toBeInstanceOf(VPropertyTimestampValue)
+    expect(card.revision?.value).toMatchObject({
+      year: 2026,
+      month: 8,
+      day: 26,
+      hour: 14,
+      minute: 25,
+      second: 30,
+      offset: 0,
+    })
+    expect(created).toBeInstanceOf(VPropertyTemporalType)
+    expect(serialize(card)).toContain('REV:20260826T142530Z\r\n')
+    expect(serialize(card)).toContain('CREATED:20240115T091500Z\r\n')
   })
 
   it('preserves unknown extensions as generic properties', () => {

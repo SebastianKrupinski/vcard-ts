@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { knownProperties } from '../src/properties/VPropertyTypes'
 import { VPropertyBase } from '../src/properties/VPropertyBase'
+import { VPropertyTemporalType } from '../src/properties/VPropertyTemporalType'
 import { VPropertyUriType } from '../src/properties/VPropertyUriType'
 
 const IANA_PROPERTIES = [
@@ -32,9 +33,13 @@ describe('property registry', () => {
 
   it('uses generic properties when no matching value type exists', () => {
     expect(knownProperties.CLIENTPIDMAP).toBe(VPropertyBase)
-    expect(knownProperties.CREATED).toBe(VPropertyBase)
     expect(knownProperties.SOCIALPROFILE).toBe(VPropertyBase)
     expect(knownProperties.AGENT).toBe(VPropertyBase)
+  })
+
+  it('uses timestamp properties for timestamp values', () => {
+    expect(knownProperties.REV).toBe(VPropertyTemporalType)
+    expect(knownProperties.CREATED).toBe(VPropertyTemporalType)
   })
 
   it('uses URI properties for registered URI values', () => {

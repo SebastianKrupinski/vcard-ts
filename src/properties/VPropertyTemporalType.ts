@@ -3,25 +3,28 @@ import { VParameterValueOptions } from '../parameters/VParameterTypes'
 import { VPropertyBase } from './VPropertyBase'
 import { VPropertyDateTimeValue } from './VPropertyDateTimeValue'
 import { VPropertyDateValue } from './VPropertyDateValue'
+import { VPropertyTimestampValue } from './VPropertyTimestampValue'
 import { VPropertyTimeValue } from './VPropertyTimeValue'
 import { decodePropertyValue } from '../codecs/propertyValue'
 
-export class VPropertyTemporalType extends VPropertyBase<VPropertyDateValue|VPropertyTimeValue|VPropertyDateTimeValue|string> {
+export class VPropertyTemporalType extends VPropertyBase<VPropertyDateValue|VPropertyTimeValue|VPropertyDateTimeValue|VPropertyTimestampValue|string> {
 
 	constructor(
 	       name: string,
-	       value?: string | VPropertyDateValue | VPropertyTimeValue | VPropertyDateTimeValue,
+	       value?: string | VPropertyDateValue | VPropertyTimeValue | VPropertyDateTimeValue | VPropertyTimestampValue,
 	       group?: string,
 	       params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {
 			// Try to get the VALUE parameter if present
 			const paramValue = params?.VALUE?.value?.toUpperCase()
-			function detectTemporalType(propertyValue: string, paramValue?: string): 'datetime' | 'date' | 'time' | 'text' {
+			function detectTemporalType(propertyName: string, propertyValue: string, paramValue?: string): 'datetime' | 'date' | 'time' | 'timestamp' | 'text' {
 				if (paramValue === VParameterValueOptions.TEXT) return 'text'
+				if (paramValue === VParameterValueOptions.TIMESTAMP) return 'timestamp'
 				if (paramValue === VParameterValueOptions.DATE_TIME) return 'datetime'
 				if (paramValue === VParameterValueOptions.DATE) return 'date'
 				if (paramValue === VParameterValueOptions.TIME) return 'time'
+				if (propertyName === 'REV' || propertyName === 'CREATED') return 'timestamp'
 				if (propertyValue.startsWith('T')) {
 					return 'time'
 				} else if (propertyValue.includes('T')) {
@@ -31,8 +34,10 @@ export class VPropertyTemporalType extends VPropertyBase<VPropertyDateValue|VPro
 				}
 			}
 
-			const format = detectTemporalType(value, paramValue)
-			if (format === 'datetime') {
+			const format = detectTemporalType(name.toUpperCase(), value, paramValue)
+			if (format === 'timestamp') {
+				value = new VPropertyTimestampValue().deserialize(value)
+			} else if (format === 'datetime') {
 				value = new VPropertyDateTimeValue().deserialize(value)
 			} else if (format === 'date') {
 				value = new VPropertyDateValue().deserialize(value)
