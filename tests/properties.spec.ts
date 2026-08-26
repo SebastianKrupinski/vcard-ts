@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { deserializeCard } from '../src/VCard'
+import { deserializeCard, serialize } from '../src/VCard'
 import { VPropertyBase } from '../src/properties/VPropertyBase'
 import { VPropertyAddressType } from '../src/properties/VPropertyAddressType'
 import { VPropertyDateValue } from '../src/properties/VPropertyDateValue'
@@ -8,6 +8,7 @@ import { VPropertyNameType } from '../src/properties/VPropertyNameType'
 import { VPropertyOrganizationType } from '../src/properties/VPropertyOrganizationType'
 import { VPropertyTextType } from '../src/properties/VPropertyTextType'
 import { VPropertyUriType } from '../src/properties/VPropertyUriType'
+import { VPropertyUriValue } from '../src/properties/VPropertyUriValue'
 
 const CARD = [
   'BEGIN:VCARD',
@@ -182,6 +183,41 @@ describe('property deserialization', () => {
       scheme: '',
       reference: '12345',
     })
+  })
+
+  it.each([
+    ['SOURCE', 'https://directory.example.com/jane.vcf'],
+    ['PHOTO', 'https://example.com/jane.jpg'],
+    ['IMPP', 'xmpp:jane@example.com'],
+    ['LOGO', 'https://example.com/logo.svg'],
+    ['MEMBER', 'urn:uuid:03a0e51f-d1aa-4385-8a53-e29025acd8af'],
+    ['SOUND', 'https://example.com/jane.ogg'],
+    ['URL', 'https://example.com/jane'],
+    ['FBURL', 'https://example.com/jane.ifb'],
+    ['CALADRURI', 'mailto:jane@example.com'],
+    ['CALURI', 'https://example.com/jane.ics'],
+    ['ORG-DIRECTORY', 'https://directory.example.com/acme'],
+    ['CONTACT-URI', 'https://example.com/contact'],
+  ])('deserializes and serializes the %s URI property', (name, value) => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      `${name}:${value}`,
+      'END:VCARD',
+    ].join('\r\n'))
+    const property = card.first(name)
+
+    expect(property).toBeInstanceOf(VPropertyUriType)
+    if (!(property instanceof VPropertyUriType)) return
+
+    const uriProperty = property as unknown as VPropertyUriType
+    const uriValue = uriProperty.value
+    expect(uriValue).toBeInstanceOf(VPropertyUriValue)
+    if (!(uriValue instanceof VPropertyUriValue)) return
+
+    expect(uriValue.serialize()).toBe(value)
+    expect(serialize(card)).toContain(`${name}:${value}\r\n`)
   })
 
   it.each([
