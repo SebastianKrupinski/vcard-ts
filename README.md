@@ -66,6 +66,8 @@ The current named getters are:
 - `birthDay`, `birthPlace`, `deathDay`, `deathPlace`, `anniversary`, and
   `gender`
 - `addresses`, `telephones`, and `emails`
+- `nicknames`, `photos`, `organizations`, `titles`, `roles`, `notes`, and
+  `urls`
 
 Other registered properties are still parsed into their appropriate property
 types and can be accessed by name.

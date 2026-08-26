@@ -1,11 +1,15 @@
 import { VPropertyAddressType } from './properties/VPropertyAddressType'
 import { VPropertyGenderType } from './properties/VPropertyGenderType'
+import { VPropertyMediaType } from './properties/VPropertyMediaType'
 import { VPropertyBaseInterface, VPropertyCollectionInterface } from './properties/VPropertyInterfaces'
 import { VPropertyNameType } from './properties/VPropertyNameType'
+import { VPropertyOrganizationType } from './properties/VPropertyOrganizationType'
+import { VPropertyStringCollectionType } from './properties/VPropertyStringCollectionType'
 import { VPropertyTemporalType } from './properties/VPropertyTemporalType'
 import { VPropertyTextType } from './properties/VPropertyTextType'
 import { VPropertyTextOrUriType } from './properties/VPropertyTextOrUriType'
 import { VPropertyUriOrTextType } from './properties/VPropertyUriOrTextType'
+import { VPropertyUriType } from './properties/VPropertyUriType'
 import {
 	VCardInterface,
 	VCardPropertyVersionValues,
@@ -146,5 +150,33 @@ export class VCard implements VCardInterface {
 
 	get emails(): VPropertyTextType[] {
 		return this.all('EMAIL') as VPropertyTextType[]
+	}
+
+	get nicknames(): VPropertyStringCollectionType[] {
+		return this.all('NICKNAME') as VPropertyStringCollectionType[]
+	}
+
+	get photos(): VPropertyMediaType[] {
+		return this.all('PHOTO') as VPropertyMediaType[]
+	}
+
+	get organizations(): VPropertyOrganizationType[] {
+		return this.all('ORG') as VPropertyOrganizationType[]
+	}
+
+	get titles(): VPropertyTextType[] {
+		return this.all('TITLE') as VPropertyTextType[]
+	}
+
+	get roles(): VPropertyTextType[] {
+		return this.all('ROLE') as VPropertyTextType[]
+	}
+
+	get notes(): VPropertyTextType[] {
+		return this.all('NOTE') as VPropertyTextType[]
+	}
+
+	get urls(): VPropertyUriType[] {
+		return this.all('URL') as VPropertyUriType[]
 	}
 }
