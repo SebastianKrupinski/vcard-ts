@@ -56,10 +56,32 @@ describe('property deserialization', () => {
     if (!(address instanceof VPropertyAddressType)) return
 
     expect(address.value).toMatchObject({
+      poBox: null,
+      extended: null,
       street: '123 Main St',
       locality: 'Toronto',
       region: 'ON',
+      code: 'M5V 1A1',
+      country: 'Canada',
     })
+  })
+
+  it('edits and serializes every scalar address component', () => {
+    const card = deserializeCard(CARD)
+    const address = card.addresses[0]?.value
+    if (!address) return
+
+    address.poBox = 'PO Box 1'
+    address.extended = 'Suite 200'
+    address.street = '456 King St'
+    address.locality = 'Ottawa'
+    address.region = 'ON'
+    address.code = 'K1A 0A6'
+    address.country = 'Canada'
+
+    expect(serialize(card)).toContain(
+      'ADR:PO Box 1;Suite 200;456 King St;Ottawa;ON;K1A 0A6;Canada\r\n',
+    )
   })
 
   it('deserializes temporal values according to their detected type', () => {

@@ -72,6 +72,8 @@ const address = card.addresses[0]?.value
 console.log(address?.street)
 console.log(address?.locality)
 console.log(address?.region)
+console.log(address?.code)
+console.log(address?.country)
 
 const gender = card.gender?.value
 console.log(gender?.sex)

@@ -100,4 +100,20 @@ export class VPropertyAddressValue {
 		this._region = region
 	}
 
+	get code(): string | null {
+		return this._postalCode
+	}
+
+	set code(code: string | null) {
+		this._postalCode = code
+	}
+
+	get country(): string | null {
+		return this._country
+	}
+
+	set country(country: string | null) {
+		this._country = country
+	}
+
 }
