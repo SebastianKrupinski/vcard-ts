@@ -59,6 +59,7 @@ export const VParameterTypeOptions = {
 }
 // options - encoding parameter
 export const VParameterEncodingOptions = {
+	B: 'B',
 	'7BIT': '7BIT',
 	'8BIT': '8BIT',
 	QUOTED: 'QUOTED-PRINTABLE',

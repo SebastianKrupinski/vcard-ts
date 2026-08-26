@@ -236,11 +236,8 @@ describe('property deserialization', () => {
 
   it.each([
     ['SOURCE', 'https://directory.example.com/jane.vcf'],
-    ['PHOTO', 'https://example.com/jane.jpg'],
     ['IMPP', 'xmpp:jane@example.com'],
-    ['LOGO', 'https://example.com/logo.svg'],
     ['MEMBER', 'urn:uuid:03a0e51f-d1aa-4385-8a53-e29025acd8af'],
-    ['SOUND', 'https://example.com/jane.ogg'],
     ['URL', 'https://example.com/jane'],
     ['FBURL', 'https://example.com/jane.ifb'],
     ['CALADRURI', 'mailto:jane@example.com'],

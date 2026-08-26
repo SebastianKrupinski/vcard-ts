@@ -4,6 +4,7 @@ import { knownProperties } from '../src/properties/VPropertyTypes'
 import { VPropertyBase } from '../src/properties/VPropertyBase'
 import { VPropertyClientPidMapType } from '../src/properties/VPropertyClientPidMapType'
 import { VPropertyGeoType } from '../src/properties/VPropertyGeoType'
+import { VPropertyMediaType } from '../src/properties/VPropertyMediaType'
 import { VPropertyTemporalType } from '../src/properties/VPropertyTemporalType'
 import { VPropertyTextOrUriType } from '../src/properties/VPropertyTextOrUriType'
 import { VPropertyTimeZoneType } from '../src/properties/VPropertyTimeZoneType'
@@ -66,9 +67,15 @@ describe('property registry', () => {
     expect(knownProperties.GEO).toBe(VPropertyGeoType)
   })
 
+  it('uses media properties for URI and inline binary values', () => {
+    for (const name of ['PHOTO', 'LOGO', 'SOUND']) {
+      expect(knownProperties[name]).toBe(VPropertyMediaType)
+    }
+  })
+
   it('uses URI properties for registered URI values', () => {
     for (const name of [
-      'SOURCE', 'LOGO', 'MEMBER', 'SOUND', 'FBURL', 'CALADRURI', 'CALURI',
+      'SOURCE', 'MEMBER', 'FBURL', 'CALADRURI', 'CALURI',
       'ORG-DIRECTORY', 'CONTACT-URI',
     ]) {
       expect(knownProperties[name]).toBe(VPropertyUriType)

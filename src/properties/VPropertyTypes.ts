@@ -3,6 +3,7 @@ import { VPropertyBase } from "./VPropertyBase"
 import { VPropertyClientPidMapType } from "./VPropertyClientPidMapType"
 import { VPropertyGenderType } from "./VPropertyGenderType"
 import { VPropertyGeoType } from "./VPropertyGeoType"
+import { VPropertyMediaType } from "./VPropertyMediaType"
 import { VPropertyNameType } from "./VPropertyNameType"
 import { VPropertyOrganizationType } from "./VPropertyOrganizationType"
 import { VPropertyStringCollectionType } from "./VPropertyStringCollectionType"
@@ -22,7 +23,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     FN: VPropertyTextType,
     N: VPropertyNameType,
     NICKNAME: VPropertyStringCollectionType,
-    PHOTO: VPropertyUriType,
+    PHOTO: VPropertyMediaType,
     BDAY: VPropertyTemporalType,
     ANNIVERSARY: VPropertyTemporalType,
     GENDER: VPropertyGenderType,
@@ -35,7 +36,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     GEO: VPropertyGeoType,
     TITLE: VPropertyTextType,
     ROLE: VPropertyTextType,
-    LOGO: VPropertyUriType,
+    LOGO: VPropertyMediaType,
     ORG: VPropertyOrganizationType,
     MEMBER: VPropertyUriType,
     RELATED: VPropertyUriOrTextType,
@@ -43,7 +44,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     NOTE: VPropertyTextType,
     PRODID: VPropertyTextType,
     REV: VPropertyTemporalType,
-    SOUND: VPropertyUriType,
+    SOUND: VPropertyMediaType,
     UID: VPropertyUriOrTextType,
     CLIENTPIDMAP: VPropertyClientPidMapType,
     URL: VPropertyUriType,
