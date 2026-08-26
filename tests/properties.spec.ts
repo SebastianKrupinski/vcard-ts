@@ -153,7 +153,7 @@ describe('property deserialization', () => {
       'BEGIN:VCARD',
       'VERSION:4.0',
       'FN:Jane Doe',
-      'ORG:Example\\; Holdings;Research\\, Development',
+      'ORG:Example\\; Holdings;Research\\, Development;Product;Design',
       'END:VCARD',
     ].join('\r\n'))
 
@@ -161,7 +161,7 @@ describe('property deserialization', () => {
 
     expect(organization?.value).toMatchObject({
       name: 'Example; Holdings',
-      unit: 'Research, Development',
+      units: ['Research, Development', 'Product', 'Design'],
     })
   })
 

@@ -56,13 +56,13 @@ describe('property value codec', () => {
   it('encodes structured organization components before joining them', () => {
     const organization = new VPropertyOrganizationValue(
       'Example; Inc.',
-      'Research, Development',
+      ['Research, Development', 'Product; Design'],
     )
 
     expect(organization.serialize())
-      .toBe('Example\\; Inc.;Research\\, Development')
+      .toBe('Example\\; Inc.;Research\\, Development;Product\\; Design')
     expect(new VPropertyOrganizationValue('Example').serialize())
-      .toBe('Example;')
+      .toBe('Example')
   })
 
   it('encodes structured gender components before joining them', () => {

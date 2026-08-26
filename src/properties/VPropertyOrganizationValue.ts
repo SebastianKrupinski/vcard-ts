@@ -4,22 +4,22 @@ import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "..
 export class VPropertyOrganizationValue {
 
 	private _name: string
-	private _unit: string | null
+	private _units: string[]
 
-	constructor(name: string = '', unit: string | null = null) {
+	constructor(name: string = '', units: string[] = []) {
 		this._name = name
-		this._unit = unit
+		this._units = units
 	}
 
 	deserialize(value: string): VPropertyOrganizationValue {
-		const parts = splitPropertyValue(value, ';').map(decodePropertyValue)
-		this._name = parts[0] || ''
-		this._unit = parts[1] || null
+		const [name = '', ...units] = splitPropertyValue(value, ';').map(decodePropertyValue)
+		this._name = name
+		this._units = units
 		return this
 	}
 
 	serialize(): string {
-		return [this._name, this._unit ?? '']
+		return [this._name, ...this._units]
 			.map(encodePropertyValue)
 			.join(';')
 	}
@@ -36,12 +36,12 @@ export class VPropertyOrganizationValue {
 		this._name = value
 	}
 
-	get unit(): string | null {
-		return this._unit
+	get units(): string[] {
+		return this._units
 	}
 
-	set unit(value: string | null) {
-		this._unit = value
+	set units(value: string[]) {
+		this._units = value
 	}
 
 }
