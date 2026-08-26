@@ -122,6 +122,8 @@ describe('invalid vCard fixtures', () => {
   it.each([
     'invalid/missing-begin.vcf',
     'invalid/missing-end.vcf',
+    'invalid/missing-fn.vcf',
+    'invalid/missing-v3-name.vcf',
     'invalid/malformed-property.vcf',
   ])('rejects %s', path => {
     expect(() => deserializeCard(fixture(path))).toThrow()

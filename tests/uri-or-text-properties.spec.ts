@@ -75,6 +75,7 @@ describe('URI-or-text properties', () => {
       'BEGIN:VCARD',
       'VERSION:3.0',
       'FN:Jane Doe',
+      'N:Doe;Jane;;;',
       'TEL:12345',
       'TEL;VALUE=phone-number:+1-416-555-0123',
       'TEL;VALUE=uri:tel:+14165550123',

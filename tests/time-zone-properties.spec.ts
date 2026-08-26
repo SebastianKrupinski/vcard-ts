@@ -61,6 +61,7 @@ describe('time zone properties', () => {
       'BEGIN:VCARD',
       'VERSION:3.0',
       'FN:Jane Doe',
+      'N:Doe;Jane;;;',
       'TZ:-05:00',
       'END:VCARD',
     ].join('\r\n'))

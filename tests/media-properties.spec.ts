@@ -16,6 +16,7 @@ describe('media properties', () => {
       'BEGIN:VCARD',
       'VERSION:3.0',
       'FN:Jane Doe',
+      'N:Doe;Jane;;;',
       line,
       'END:VCARD',
     ].join('\r\n'))
@@ -33,6 +34,7 @@ describe('media properties', () => {
       'BEGIN:VCARD',
       'VERSION:3.0',
       'FN:Jane Doe',
+      'N:Doe;Jane;;;',
       'PHOTO;VALUE=binary;ENCODING=b;TYPE=JPEG:SGVsbG8=',
       'END:VCARD',
     ].join('\r\n'))

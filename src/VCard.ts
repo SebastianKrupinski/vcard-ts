@@ -81,6 +81,16 @@ export function deserializeCard(data: string): VCard {
 		throw new Error(`Invalid vCard data: unsupported VERSION value ${String(versionValue)}`)
 	}
 
+	const propertyCount = (name: string): number => properties
+		.filter(property => property.name.toUpperCase() === name)
+		.length
+	if (propertyCount('FN') === 0) {
+		throw new Error('Invalid vCard data: missing required FN property')
+	}
+	if (versionValue === VCardPropertyVersionValues.V3_0 && propertyCount('N') === 0) {
+		throw new Error('Invalid vCard data: missing required N property for VERSION 3.0')
+	}
+
 	return new VCard(versionValue as VCardPropertyVersionValues, properties)
 }
 

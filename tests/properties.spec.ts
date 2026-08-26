@@ -274,6 +274,7 @@ describe('property deserialization', () => {
       'BEGIN:VCARD',
       `VERSION:${version}`,
       'FN:Toronto',
+      'N:Toronto;;;;',
       `GEO:${value}`,
       'END:VCARD',
     ].join('\r\n'))

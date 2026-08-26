@@ -7,6 +7,8 @@ describe('parameter deserialization', () => {
     const card = deserializeCard([
       'BEGIN:VCARD',
       'VERSION:3.0',
+      'FN:Jane Doe',
+      'N:Doe;Jane;;;',
       'EMAIL;TYPE=WORK;PREF=1:jane@example.com',
       'END:VCARD',
     ].join('\r\n'))
@@ -25,6 +27,8 @@ describe('parameter deserialization', () => {
     const card = deserializeCard([
       'BEGIN:VCARD',
       'VERSION:3.0',
+      'FN:Jane Doe',
+      'N:Doe;Jane;;;',
       'item1.EMAIL;TYPE=HOME:jane@example.com',
       'END:VCARD',
     ].join('\r\n'))
@@ -43,6 +47,8 @@ describe('parameter deserialization', () => {
     const card = deserializeCard([
       'BEGIN:VCARD',
       'VERSION:3.0',
+      'FN:Jane Doe',
+      'N:Doe;Jane;;;',
       'a.EMAIL:jane@example.com',
       'END:VCARD',
     ].join('\r\n'))
@@ -55,6 +61,7 @@ describe('parameter deserialization', () => {
       'BEGIN:VCARD',
       'VERSION:3.0',
       'FN:Jane Doe',
+      'N:Doe;Jane;;;',
       'END:VCARD',
     ].join('\r\n'))
 
@@ -66,6 +73,7 @@ describe('parameter deserialization', () => {
     const card = deserializeCard([
       'BEGIN:VCARD',
       'VERSION:4.0',
+      'FN:Jane Doe',
       'EMAIL;type="WORK,VOICE":jane@example.com',
       'END:VCARD',
     ].join('\r\n'))
@@ -89,6 +97,7 @@ describe('parameter deserialization', () => {
     const card = deserializeCard([
       'BEGIN:VCARD',
       'VERSION:4.0',
+      'FN:Jane Doe',
       'EMAIL;LABEL="Desk^\'s^^phone^nSecond line":jane@example.com',
       'END:VCARD',
     ].join('\r\n'))

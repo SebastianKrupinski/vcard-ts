@@ -1,6 +1,7 @@
 BEGIN:VCARD
 VERSION:3.0
 FN:Grouped Example
+N:Example;Grouped;;;
 item1.EMAIL;TYPE=HOME;PREF=1:grouped@example.com
 item1.X-ABLabel:Personal
 END:VCARD

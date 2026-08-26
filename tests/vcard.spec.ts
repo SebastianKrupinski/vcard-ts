@@ -6,6 +6,7 @@ const SINGLE = [
   'BEGIN:VCARD',
   'VERSION:3.0',
   'FN:Jane Doe',
+  'N:Doe;Jane;;;',
   'END:VCARD',
 ].join('\r\n')
 
@@ -33,6 +34,7 @@ describe('vCard deserialization', () => {
       'VERSION:3.0',
       'FN:Jane',
       ' Doe',
+      'N:Doe;Jane;;;',
       'END:VCARD',
     ].join('\r\n'))
 
@@ -45,6 +47,7 @@ describe('vCard deserialization', () => {
       'VERSION:3.0',
       '',
       'FN:Jane Doe',
+      'N:Doe;Jane;;;',
       '',
       'END:VCARD',
     ].join('\r\n'))
@@ -106,5 +109,22 @@ describe('vCard deserialization', () => {
       'FN:Jane Doe',
       'END:VCARD',
     ].join('\r\n'))).toThrow(`unsupported VERSION value ${version}`)
+  })
+
+  it('rejects a card without a required FN property', () => {
+    expect(() => deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'END:VCARD',
+    ].join('\r\n'))).toThrow('missing required FN property')
+  })
+
+  it('rejects a vCard 3.0 card without a required N property', () => {
+    expect(() => deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'FN:Jane Doe',
+      'END:VCARD',
+    ].join('\r\n'))).toThrow('missing required N property for VERSION 3.0')
   })
 })

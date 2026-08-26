@@ -13,7 +13,8 @@ specific parser behavior rather than imitating a particular contact provider.
 - `valid/escaped-text.vcf`: escaped newlines, commas, and semicolons
 - `valid/grouped-properties.vcf`: property groups and multiple parameters
 - `valid/extensions.vcf`: preservation of unknown extension properties
-- `invalid/`: malformed card and content-line examples
+- `invalid/`: malformed boundaries, content lines, and missing required
+  properties
 
 Every valid fixture participates in a semantic deserialize, serialize, and
 deserialize round-trip test.
