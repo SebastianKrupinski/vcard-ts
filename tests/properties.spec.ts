@@ -7,6 +7,7 @@ import { VPropertyDateValue } from '../src/properties/VPropertyDateValue'
 import { VPropertyNameType } from '../src/properties/VPropertyNameType'
 import { VPropertyOrganizationType } from '../src/properties/VPropertyOrganizationType'
 import { VPropertyTextType } from '../src/properties/VPropertyTextType'
+import { VPropertyTextOrUriType } from '../src/properties/VPropertyTextOrUriType'
 import { VPropertyTemporalType } from '../src/properties/VPropertyTemporalType'
 import { VPropertyTimestampValue } from '../src/properties/VPropertyTimestampValue'
 import { VPropertyUriType } from '../src/properties/VPropertyUriType'
@@ -33,7 +34,7 @@ describe('property deserialization', () => {
     expect(card.formattedName).toBeInstanceOf(VPropertyTextType)
     expect(card.name).toBeInstanceOf(VPropertyNameType)
     expect(card.addresses).toEqual([expect.any(VPropertyAddressType)])
-    expect(card.telephones).toEqual([expect.any(VPropertyUriType)])
+    expect(card.telephones).toEqual([expect.any(VPropertyTextOrUriType)])
     expect(card.first('ORG')).toBeInstanceOf(VPropertyOrganizationType)
     expect(card.first('URL')).toBeInstanceOf(VPropertyUriType)
   })
@@ -208,10 +209,7 @@ describe('property deserialization', () => {
       scheme: 'https',
       reference: '//example.com:8443/profile',
     })
-    expect(card.first('TEL')?.value).toMatchObject({
-      scheme: '',
-      reference: '12345',
-    })
+    expect(card.first('TEL')?.value).toBe('12345')
   })
 
   it.each([

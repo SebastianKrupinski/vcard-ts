@@ -42,7 +42,7 @@ describe('property registry', () => {
     for (const name of ['UID', 'RELATED', 'KEY', 'SOCIALPROFILE']) {
       expect(knownProperties[name]).toBe(VPropertyUriOrTextType)
     }
-    for (const name of ['BIRTHPLACE', 'DEATHPLACE']) {
+    for (const name of ['TEL', 'BIRTHPLACE', 'DEATHPLACE']) {
       expect(knownProperties[name]).toBe(VPropertyTextOrUriType)
     }
   })

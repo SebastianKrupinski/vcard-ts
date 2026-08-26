@@ -69,4 +69,28 @@ describe('URI-or-text properties', () => {
     expect(deserializeCard(output).first('RELATED')?.value).toBe('Jane, Doe')
     expect(output).toContain('DEATHPLACE;VALUE=uri:geo:41.731944,-49.945833\r\n')
   })
+
+  it('preserves text, phone-number, and URI telephone values', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'FN:Jane Doe',
+      'TEL:12345',
+      'TEL;VALUE=phone-number:+1-416-555-0123',
+      'TEL;VALUE=uri:tel:+14165550123',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.telephones.map(telephone => telephone.value)).toEqual([
+      '12345',
+      '+1-416-555-0123',
+      expect.any(VPropertyUriValue),
+    ])
+
+    const output = serialize(card)
+    expect(output).toContain('TEL:12345\r\n')
+    expect(output).not.toContain('TEL::12345')
+    expect(output).toContain('TEL;VALUE=phone-number:+1-416-555-0123\r\n')
+    expect(output).toContain('TEL;VALUE=uri:tel:+14165550123\r\n')
+  })
 })

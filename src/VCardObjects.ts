@@ -6,7 +6,6 @@ import { VPropertyTemporalType } from './properties/VPropertyTemporalType'
 import { VPropertyTextType } from './properties/VPropertyTextType'
 import { VPropertyTextOrUriType } from './properties/VPropertyTextOrUriType'
 import { VPropertyUriOrTextType } from './properties/VPropertyUriOrTextType'
-import { VPropertyUriType } from './properties/VPropertyUriType'
 import {
 	VCardInterface,
 	VCardPropertyVersionValues,
@@ -141,8 +140,8 @@ export class VCard implements VCardInterface {
 		return this.all('ADR') as VPropertyAddressType[]
 	}
 
-	get telephones(): VPropertyUriType[] {
-		return this.all('TEL') as VPropertyUriType[]
+	get telephones(): VPropertyTextOrUriType[] {
+		return this.all('TEL') as VPropertyTextOrUriType[]
 	}
 
 	get emails(): VPropertyTextType[] {

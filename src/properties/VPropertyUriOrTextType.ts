@@ -15,9 +15,9 @@ export class VPropertyUriOrTextType extends VPropertyBase<VPropertyUriValue | st
 	) {
 		if (typeof value === 'string') {
 			const valueType = params?.VALUE?.value?.toUpperCase() ?? defaultType
-			value = valueType === VParameterValueOptions.TEXT
-				? decodePropertyValue(value)
-				: new VPropertyUriValue().deserialize(value)
+			value = valueType === VParameterValueOptions.URI
+				? new VPropertyUriValue().deserialize(value)
+				: decodePropertyValue(value)
 		}
 		super(name, value, group, params)
 	}

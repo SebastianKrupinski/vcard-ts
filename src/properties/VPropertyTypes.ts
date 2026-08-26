@@ -24,7 +24,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     ANNIVERSARY: VPropertyTemporalType,
     GENDER: VPropertyGenderType,
     ADR: VPropertyAddressType,
-    TEL: VPropertyUriType,
+    TEL: VPropertyTextOrUriType,
     EMAIL: VPropertyTextType,
     IMPP: VPropertyUriType,
     LANG: VPropertyTextType,

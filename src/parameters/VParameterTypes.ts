@@ -28,6 +28,7 @@ export const VParameterValueOptions = {
 	INTEGER: 'INTEGER',
 	FLOAT: 'FLOAT',
 	LANGUAGE: 'LANGUAGE-TAG',
+	PHONE_NUMBER: 'PHONE-NUMBER',
 	BINARY: 'BINARY',
 }
 // options - type parameter
