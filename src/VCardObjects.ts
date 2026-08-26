@@ -4,6 +4,8 @@ import { VPropertyBaseInterface, VPropertyCollectionInterface } from './properti
 import { VPropertyNameType } from './properties/VPropertyNameType'
 import { VPropertyTemporalType } from './properties/VPropertyTemporalType'
 import { VPropertyTextType } from './properties/VPropertyTextType'
+import { VPropertyTextOrUriType } from './properties/VPropertyTextOrUriType'
+import { VPropertyUriOrTextType } from './properties/VPropertyUriOrTextType'
 import { VPropertyUriType } from './properties/VPropertyUriType'
 import {
 	VCardInterface,
@@ -91,8 +93,8 @@ export class VCard implements VCardInterface {
 		return this.first('PRODID') as VPropertyTextType | null
 	}
 
-	get uid(): VPropertyTextType | null {
-		return this.first('UID') as VPropertyTextType | null
+	get uid(): VPropertyUriOrTextType | null {
+		return this.first('UID') as VPropertyUriOrTextType | null
 	}
 
 	get revision(): VPropertyTemporalType | null {
@@ -115,16 +117,16 @@ export class VCard implements VCardInterface {
 		return this.first('BDAY') as VPropertyTemporalType | null
 	}
 
-	get birthPlace(): VPropertyTextType | null {
-		return this.first('BIRTHPLACE') as VPropertyTextType | null
+	get birthPlace(): VPropertyTextOrUriType | null {
+		return this.first('BIRTHPLACE') as VPropertyTextOrUriType | null
 	}
 
 	get deathDay(): VPropertyTemporalType | null {
 		return this.first('DEATHDATE') as VPropertyTemporalType | null
 	}
 
-	get deathPlace(): VPropertyTextType | null {
-		return this.first('DEATHPLACE') as VPropertyTextType | null
+	get deathPlace(): VPropertyTextOrUriType | null {
+		return this.first('DEATHPLACE') as VPropertyTextOrUriType | null
 	}
 
 	get anniversary(): VPropertyTemporalType | null {

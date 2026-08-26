@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { serializeProperty } from '../src/VCard'
+import { deserializeCard, serialize, serializeProperty } from '../src/VCard'
 import { VParameterCollection } from '../src/parameters/VParameterObject'
 import { VPropertyTextOrUriType } from '../src/properties/VPropertyTextOrUriType'
 import { VPropertyUriOrTextType } from '../src/properties/VPropertyUriOrTextType'
@@ -42,5 +42,31 @@ describe('URI-or-text properties', () => {
 
     expect(text.value).toBe('Toronto, Ontario')
     expect(uri.value).toBeInstanceOf(VPropertyUriValue)
+  })
+
+  it('applies mixed-value types through the property registry', () => {
+    const card = deserializeCard([
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      'UID:urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6',
+      'RELATED;VALUE=text:Jane\\, Doe',
+      'KEY:https://example.com/jane.pub',
+      'BIRTHPLACE:Toronto\\, Ontario',
+      'DEATHPLACE;VALUE=uri:geo:41.731944,-49.945833',
+      'SOCIALPROFILE:https://social.example.com/jane',
+      'END:VCARD',
+    ].join('\r\n'))
+
+    expect(card.uid?.value).toBeInstanceOf(VPropertyUriValue)
+    expect(card.first('RELATED')?.value).toBe('Jane, Doe')
+    expect(card.first('KEY')?.value).toBeInstanceOf(VPropertyUriValue)
+    expect(card.birthPlace?.value).toBe('Toronto, Ontario')
+    expect(card.deathPlace?.value).toBeInstanceOf(VPropertyUriValue)
+    expect(card.first('SOCIALPROFILE')?.value).toBeInstanceOf(VPropertyUriValue)
+
+    const output = serialize(card)
+    expect(deserializeCard(output).first('RELATED')?.value).toBe('Jane, Doe')
+    expect(output).toContain('DEATHPLACE;VALUE=uri:geo:41.731944,-49.945833\r\n')
   })
 })

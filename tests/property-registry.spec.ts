@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { knownProperties } from '../src/properties/VPropertyTypes'
 import { VPropertyBase } from '../src/properties/VPropertyBase'
 import { VPropertyTemporalType } from '../src/properties/VPropertyTemporalType'
+import { VPropertyTextOrUriType } from '../src/properties/VPropertyTextOrUriType'
+import { VPropertyUriOrTextType } from '../src/properties/VPropertyUriOrTextType'
 import { VPropertyUriType } from '../src/properties/VPropertyUriType'
 
 const IANA_PROPERTIES = [
@@ -33,8 +35,16 @@ describe('property registry', () => {
 
   it('uses generic properties when no matching value type exists', () => {
     expect(knownProperties.CLIENTPIDMAP).toBe(VPropertyBase)
-    expect(knownProperties.SOCIALPROFILE).toBe(VPropertyBase)
     expect(knownProperties.AGENT).toBe(VPropertyBase)
+  })
+
+  it('uses mixed-value properties with their RFC default type', () => {
+    for (const name of ['UID', 'RELATED', 'KEY', 'SOCIALPROFILE']) {
+      expect(knownProperties[name]).toBe(VPropertyUriOrTextType)
+    }
+    for (const name of ['BIRTHPLACE', 'DEATHPLACE']) {
+      expect(knownProperties[name]).toBe(VPropertyTextOrUriType)
+    }
   })
 
   it('uses timestamp properties for timestamp values', () => {

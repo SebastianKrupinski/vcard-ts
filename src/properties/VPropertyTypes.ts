@@ -6,6 +6,8 @@ import { VPropertyOrganizationType } from "./VPropertyOrganizationType"
 import { VPropertyStringCollectionType } from "./VPropertyStringCollectionType"
 import { VPropertyTemporalType } from "./VPropertyTemporalType"
 import { VPropertyTextType } from "./VPropertyTextType"
+import { VPropertyTextOrUriType } from "./VPropertyTextOrUriType"
+import { VPropertyUriOrTextType } from "./VPropertyUriOrTextType"
 import { VPropertyUriType } from "./VPropertyUriType"
 
 // VCard properties with runtime introspection capability
@@ -33,24 +35,24 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     LOGO: VPropertyUriType,
     ORG: VPropertyOrganizationType,
     MEMBER: VPropertyUriType,
-    RELATED: VPropertyTextType,
+    RELATED: VPropertyUriOrTextType,
     CATEGORIES: VPropertyStringCollectionType,
     NOTE: VPropertyTextType,
     PRODID: VPropertyTextType,
     REV: VPropertyTemporalType,
     SOUND: VPropertyUriType,
-    UID: VPropertyTextType,
+    UID: VPropertyUriOrTextType,
     CLIENTPIDMAP: VPropertyBase,
     URL: VPropertyUriType,
     VERSION: VPropertyTextType,
-    KEY: VPropertyTextType,
+    KEY: VPropertyUriOrTextType,
     FBURL: VPropertyUriType,
     CALADRURI: VPropertyUriType,
     CALURI: VPropertyUriType,
 
     // RFC 6474
-    BIRTHPLACE: VPropertyTextType,
-    DEATHPLACE: VPropertyTextType,
+    BIRTHPLACE: VPropertyTextOrUriType,
+    DEATHPLACE: VPropertyTextOrUriType,
     DEATHDATE: VPropertyTemporalType,
 
     // RFC 6715
@@ -67,7 +69,7 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     GRAMGENDER: VPropertyTextType,
     LANGUAGE: VPropertyTextType,
     PRONOUNS: VPropertyTextType,
-    SOCIALPROFILE: VPropertyBase,
+    SOCIALPROFILE: VPropertyUriOrTextType,
 
     // RFC 9555
     JSPROP: VPropertyTextType,
