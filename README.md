@@ -68,6 +68,8 @@ The current named getters are:
 - `addresses`, `telephones`, and `emails`
 - `nicknames`, `photos`, `organizations`, `titles`, `roles`, `notes`, and
   `urls`
+- `instantMessaging`, `languages`, `timeZones`, `geoLocations`, and
+  `categories`
 
 Other registered properties are still parsed into their appropriate property
 types and can be accessed by name.

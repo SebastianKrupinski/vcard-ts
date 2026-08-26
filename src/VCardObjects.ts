@@ -1,5 +1,6 @@
 import { VPropertyAddressType } from './properties/VPropertyAddressType'
 import { VPropertyGenderType } from './properties/VPropertyGenderType'
+import { VPropertyGeoType } from './properties/VPropertyGeoType'
 import { VPropertyMediaType } from './properties/VPropertyMediaType'
 import { VPropertyBaseInterface, VPropertyCollectionInterface } from './properties/VPropertyInterfaces'
 import { VPropertyNameType } from './properties/VPropertyNameType'
@@ -8,6 +9,7 @@ import { VPropertyStringCollectionType } from './properties/VPropertyStringColle
 import { VPropertyTemporalType } from './properties/VPropertyTemporalType'
 import { VPropertyTextType } from './properties/VPropertyTextType'
 import { VPropertyTextOrUriType } from './properties/VPropertyTextOrUriType'
+import { VPropertyTimeZoneType } from './properties/VPropertyTimeZoneType'
 import { VPropertyUriOrTextType } from './properties/VPropertyUriOrTextType'
 import { VPropertyUriType } from './properties/VPropertyUriType'
 import {
@@ -178,5 +180,25 @@ export class VCard implements VCardInterface {
 
 	get urls(): VPropertyUriType[] {
 		return this.all('URL') as VPropertyUriType[]
+	}
+
+	get instantMessaging(): VPropertyUriType[] {
+		return this.all('IMPP') as VPropertyUriType[]
+	}
+
+	get languages(): VPropertyTextType[] {
+		return this.all('LANG') as VPropertyTextType[]
+	}
+
+	get timeZones(): VPropertyTimeZoneType[] {
+		return this.all('TZ') as VPropertyTimeZoneType[]
+	}
+
+	get geoLocations(): VPropertyGeoType[] {
+		return this.all('GEO') as VPropertyGeoType[]
+	}
+
+	get categories(): VPropertyStringCollectionType[] {
+		return this.all('CATEGORIES') as VPropertyStringCollectionType[]
 	}
 }
