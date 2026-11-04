@@ -13,6 +13,7 @@ import { VPropertyTextOrUriType } from "./VPropertyTextOrUriType"
 import { VPropertyTimeZoneType } from "./VPropertyTimeZoneType"
 import { VPropertyUriOrTextType } from "./VPropertyUriOrTextType"
 import { VPropertyUriType } from "./VPropertyUriType"
+import type { VCardVersion } from "../VCardInterfaces"
 
 // VCard properties with runtime introspection capability
 export const knownProperties: Record<string, new (...args: any[]) => VPropertyBase<any>> = {
@@ -86,4 +87,30 @@ export const knownProperties: Record<string, new (...args: any[]) => VPropertyBa
     AGENT: VPropertyTextType,
     'SORT-STRING': VPropertyTextType,
     CLASS: VPropertyTextType,
+}
+
+export const propertyCardinalities: Record<
+    string,
+    Partial<Record<VCardVersion, { min?: number; max?: number }>>
+> = {
+    FN: {
+        '3.0': { min: 1 },
+        '4.0': { min: 1 },
+    },
+    N: {
+        '3.0': { min: 1, max: 1 },
+        '4.0': { max: 1 },
+    },
+    KIND: { '4.0': { max: 1 } },
+    BDAY: { '4.0': { max: 1 } },
+    ANNIVERSARY: { '4.0': { max: 1 } },
+    GENDER: { '4.0': { max: 1 } },
+    PRODID: { '4.0': { max: 1 } },
+    REV: { '4.0': { max: 1 } },
+    UID: { '4.0': { max: 1 } },
+    BIRTHPLACE: { '4.0': { max: 1 } },
+    DEATHPLACE: { '4.0': { max: 1 } },
+    DEATHDATE: { '4.0': { max: 1 } },
+    CREATED: { '4.0': { max: 1 } },
+    LANGUAGE: { '4.0': { max: 1 } },
 }

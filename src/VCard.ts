@@ -4,9 +4,9 @@ import { decodePropertyValue, encodePropertyValue } from './codecs/propertyValue
 import { foldContentLine, normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
 import { VPropertyBase } from './properties/VPropertyBase'
 import type { VPropertyBaseInterface } from './properties/VPropertyInterfaces'
-import { VCardInterface, VCardPropertyVersionValues } from './VCardInterfaces'
+import { VCardInterface, VCardVersion } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
-import { knownProperties } from './properties/VPropertyTypes'
+import { knownProperties, propertyCardinalities } from './properties/VPropertyTypes'
 import { VPropertyCollection } from './properties/VPropertyCollection'
 
 /**
@@ -77,21 +77,64 @@ export function deserializeCard(data: string): VCard {
 
 	const versionValue = versionProperties[0].value
 	if (typeof versionValue !== 'string'
-		|| !Object.values(VCardPropertyVersionValues).includes(versionValue as VCardPropertyVersionValues)) {
+		|| !Object.values(VCardVersion).includes(versionValue as VCardVersion)) {
 		throw new Error(`Invalid vCard data: unsupported VERSION value ${String(versionValue)}`)
 	}
 
-	const propertyCount = (name: string): number => properties
-		.filter(property => property.name.toUpperCase() === name)
-		.length
-	if (propertyCount('FN') === 0) {
-		throw new Error('Invalid vCard data: missing required FN property')
+	validatePropertyCardinalities(
+		properties,
+		versionValue as VCardVersion,
+	)
+
+	return new VCard(versionValue as VCardVersion, properties)
+}
+
+function validatePropertyCardinalities(
+	properties: VPropertyCollection,
+	version: VCardVersion,
+): void {
+	for (const [name, versionRules] of Object.entries(propertyCardinalities)) {
+		const rules = versionRules[version]
+		if (!rules) continue
+
+		const matches = properties.filter(property => property.name.toUpperCase() === name)
+		const count = version === VCardVersion.V4_0
+			? countLogicalProperties(matches)
+			: matches.length
+
+		if (rules.min !== undefined && count < rules.min) {
+			const expectation = rules.max === rules.min
+				? `exactly ${rules.min}`
+				: `at least ${rules.min}`
+			throw new Error(
+				`Invalid vCard data: expected ${expectation} ${name} property, found ${count}`,
+			)
+		}
+		if (rules.max !== undefined && count > rules.max) {
+			const expectation = rules.min === rules.max
+				? `exactly ${rules.max}`
+				: `at most ${rules.max}`
+			throw new Error(
+				`Invalid vCard data: expected ${expectation} ${name} property, found ${count}`,
+			)
+		}
 	}
-	if (versionValue === VCardPropertyVersionValues.V3_0 && propertyCount('N') === 0) {
-		throw new Error('Invalid vCard data: missing required N property for VERSION 3.0')
+}
+
+function countLogicalProperties(properties: VPropertyBaseInterface[]): number {
+	const alternativeIds = new Set<string>()
+	let count = 0
+
+	for (const property of properties) {
+		const alternativeId = property.params.ALTID?.value
+		if (alternativeId) {
+			alternativeIds.add(alternativeId)
+		} else {
+			count++
+		}
 	}
 
-	return new VCard(versionValue as VCardPropertyVersionValues, properties)
+	return count + alternativeIds.size
 }
 
 /**
@@ -236,9 +279,9 @@ function extractPropertyParameter(data: string): { name: string; value: string; 
  * @param version
  */
 export function createCard(version: '3.0' | '4.0' = '4.0'): VCard {
-	let v: VCardPropertyVersionValues
+	let v: VCardVersion
 	if (typeof version === 'string') {
-		v = VCardPropertyVersionValues[('V' + version.replace('.', '_')) as keyof typeof VCardPropertyVersionValues] ?? VCardPropertyVersionValues.V3_0
+		v = VCardVersion[('V' + version.replace('.', '_')) as keyof typeof VCardVersion] ?? VCardVersion.V3_0
 	} else {
 		v = version
 	}

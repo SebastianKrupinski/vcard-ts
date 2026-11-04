@@ -6,7 +6,7 @@ import {
   deserializeCard,
   serialize,
   VCard,
-  VCardPropertyVersionValues,
+  VCardVersion,
   VPropertyTextType,
 } from '../src'
 
@@ -27,7 +27,7 @@ describe('public API', () => {
 
   it('serializes a card with its authoritative version and CRLF lines', () => {
     const card = deserializeCard(CARD)
-    card.version = VCardPropertyVersionValues.V3_0
+    card.version = VCardVersion.V3_0
 
     expect(serialize(card)).toBe([
       'BEGIN:VCARD',

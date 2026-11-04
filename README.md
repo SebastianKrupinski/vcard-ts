@@ -216,6 +216,10 @@ Deserialization rejects unsupported versions and malformed card boundaries. A
 card must contain exactly one `VERSION` property and at least one `FN`
 property. A vCard 3.0 card must also contain an `N` property.
 
+For vCard 4.0, registered singleton properties such as `N`, `UID`, `REV`,
+`BDAY`, `ANNIVERSARY`, and `GENDER` may occur at most once. Alternative
+representations carrying the same `ALTID` count as one logical property.
+
 ## Development
 
 ```sh

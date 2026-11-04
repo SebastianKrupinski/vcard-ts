@@ -14,15 +14,15 @@ import { VPropertyUriOrTextType } from './properties/VPropertyUriOrTextType'
 import { VPropertyUriType } from './properties/VPropertyUriType'
 import {
 	VCardInterface,
-	VCardPropertyVersionValues,
+	VCardVersion,
 } from './VCardInterfaces'
 
 export class VCard implements VCardInterface {
 
-	private _version: VCardPropertyVersionValues = VCardPropertyVersionValues.V3_0
+	private _version: VCardVersion = VCardVersion.V3_0
 	properties: VPropertyCollectionInterface
 
-	constructor(version: VCardPropertyVersionValues = VCardPropertyVersionValues.V3_0, properties: VPropertyCollectionInterface = []) {
+	constructor(version: VCardVersion = VCardVersion.V3_0, properties: VPropertyCollectionInterface = []) {
 		this._version = version
 		this.properties = properties
 	}
@@ -86,11 +86,11 @@ export class VCard implements VCardInterface {
 		return this.properties.some((p) => p.name.toUpperCase() === name.toUpperCase())
 	}
 
-	get version(): VCardPropertyVersionValues {
+	get version(): VCardVersion {
 		return this._version
 	}
 
-	set version(version: VCardPropertyVersionValues) {
+	set version(version: VCardVersion) {
 		this._version = version
 	}
 

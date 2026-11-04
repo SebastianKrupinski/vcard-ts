@@ -116,7 +116,7 @@ describe('vCard deserialization', () => {
       'BEGIN:VCARD',
       'VERSION:4.0',
       'END:VCARD',
-    ].join('\r\n'))).toThrow('missing required FN property')
+    ].join('\r\n'))).toThrow('expected at least 1 FN property, found 0')
   })
 
   it('rejects a vCard 3.0 card without a required N property', () => {
@@ -125,6 +125,6 @@ describe('vCard deserialization', () => {
       'VERSION:3.0',
       'FN:Jane Doe',
       'END:VCARD',
-    ].join('\r\n'))).toThrow('missing required N property for VERSION 3.0')
+    ].join('\r\n'))).toThrow('expected exactly 1 N property, found 0')
   })
 })
