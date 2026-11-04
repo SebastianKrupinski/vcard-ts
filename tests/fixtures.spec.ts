@@ -110,7 +110,7 @@ describe('valid vCard fixtures', () => {
     'valid/escaped-text.vcf',
     'valid/grouped-properties.vcf',
     'valid/extensions.vcf',
-  ])('round-trips %s without changing its card data', path => {
+  ])('produces stable output for %s when re-parsed', path => {
     const original = deserializeCard(fixture(path))
     const roundTripped = deserializeCard(serialize(original))
 
