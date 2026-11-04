@@ -6,7 +6,7 @@ import { VPropertyBase } from './properties/VPropertyBase'
 import type { VPropertyBaseInterface } from './properties/VPropertyInterfaces'
 import { VCardInterface, VCardVersion } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
-import { knownProperties, propertyCardinalities } from './properties/VPropertyTypes'
+import { propertyTypes, propertyCardinalities } from './properties/VPropertyTypes'
 import { VPropertyCollection } from './properties/VPropertyCollection'
 
 /**
@@ -171,7 +171,7 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 	if (!name) {
 		return new VPropertyBase('', decodePropertyValue(rawValue), group, params)
 	}
-	const PropertyType = knownProperties[name.toUpperCase()]
+	const PropertyType = propertyTypes[name.toUpperCase()]
 	if (PropertyType === VPropertyBase) {
 		return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
 	}

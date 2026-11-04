@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { knownProperties } from '../src/properties/VPropertyTypes'
+import { propertyTypes } from '../src/properties/VPropertyTypes'
 import { VPropertyClientPidMapType } from '../src/properties/VPropertyClientPidMapType'
 import { VPropertyGeoType } from '../src/properties/VPropertyGeoType'
 import { VPropertyMediaType } from '../src/properties/VPropertyMediaType'
@@ -28,48 +28,48 @@ const VCARD_3_ONLY_PROPERTIES = [
 
 describe('property registry', () => {
   it('contains every property in the current IANA registry', () => {
-    expect(Object.keys(knownProperties))
+    expect(Object.keys(propertyTypes))
       .toEqual(expect.arrayContaining([...IANA_PROPERTIES]))
   })
 
   it('contains properties exclusive to vCard 3.0', () => {
-    expect(Object.keys(knownProperties))
+    expect(Object.keys(propertyTypes))
       .toEqual(expect.arrayContaining([...VCARD_3_ONLY_PROPERTIES]))
   })
 
   it('uses text for the vCard 3.0 agent property', () => {
-    expect(knownProperties.AGENT).toBe(VPropertyTextType)
+    expect(propertyTypes.AGENT).toBe(VPropertyTextType)
   })
 
   it('uses the structured client PID map property', () => {
-    expect(knownProperties.CLIENTPIDMAP).toBe(VPropertyClientPidMapType)
+    expect(propertyTypes.CLIENTPIDMAP).toBe(VPropertyClientPidMapType)
   })
 
   it('uses mixed-value properties with their RFC default type', () => {
     for (const name of ['UID', 'RELATED', 'KEY', 'SOCIALPROFILE']) {
-      expect(knownProperties[name]).toBe(VPropertyUriOrTextType)
+      expect(propertyTypes[name]).toBe(VPropertyUriOrTextType)
     }
     for (const name of ['TEL', 'BIRTHPLACE', 'DEATHPLACE']) {
-      expect(knownProperties[name]).toBe(VPropertyTextOrUriType)
+      expect(propertyTypes[name]).toBe(VPropertyTextOrUriType)
     }
   })
 
   it('uses timestamp properties for timestamp values', () => {
-    expect(knownProperties.REV).toBe(VPropertyTemporalType)
-    expect(knownProperties.CREATED).toBe(VPropertyTemporalType)
+    expect(propertyTypes.REV).toBe(VPropertyTemporalType)
+    expect(propertyTypes.CREATED).toBe(VPropertyTemporalType)
   })
 
   it('uses the time zone property for text, URI, and UTC offset values', () => {
-    expect(knownProperties.TZ).toBe(VPropertyTimeZoneType)
+    expect(propertyTypes.TZ).toBe(VPropertyTimeZoneType)
   })
 
   it('uses the geographic property for version-specific coordinates', () => {
-    expect(knownProperties.GEO).toBe(VPropertyGeoType)
+    expect(propertyTypes.GEO).toBe(VPropertyGeoType)
   })
 
   it('uses media properties for URI and inline binary values', () => {
     for (const name of ['PHOTO', 'LOGO', 'SOUND']) {
-      expect(knownProperties[name]).toBe(VPropertyMediaType)
+      expect(propertyTypes[name]).toBe(VPropertyMediaType)
     }
   })
 
@@ -78,7 +78,7 @@ describe('property registry', () => {
       'SOURCE', 'MEMBER', 'FBURL', 'CALADRURI', 'CALURI',
       'ORG-DIRECTORY', 'CONTACT-URI',
     ]) {
-      expect(knownProperties[name]).toBe(VPropertyUriType)
+      expect(propertyTypes[name]).toBe(VPropertyUriType)
     }
   })
 })
