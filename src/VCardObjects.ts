@@ -91,6 +91,13 @@ export class VCard implements VCardInterface {
 	}
 
 	set version(version: VCardVersion) {
+		if (version !== this._version) {
+			// The original text was written for the old version, so it can't be reused.
+			for (const property of this.properties) {
+				const value = property.value as { clearSource?: () => void } | null
+				value?.clearSource?.()
+			}
+		}
 		this._version = version
 	}
 

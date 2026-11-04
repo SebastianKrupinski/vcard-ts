@@ -1,3 +1,4 @@
+import { VCardVersion } from '../VCardInterfaces'
 import { VParameterValueOptions } from '../parameters/VParameterTypes'
 import { VPropertyDateValue } from './VPropertyDateValue'
 import { VPropertyTimeValue } from './VPropertyTimeValue'
@@ -13,14 +14,27 @@ export class VPropertyDateTimeValue {
 	}
 
 	deserialize(value: string): VPropertyDateTimeValue {
-		const [datePart, timePart] = value.split('T')
-		this._date = new VPropertyDateValue().deserialize(datePart || '')
-		this._time = new VPropertyTimeValue().deserialize(timePart || '')
+		// Split on the first T only, so the two parts always rejoin to the original text.
+		const separator = value.indexOf('T')
+		const datePart = separator === -1 ? value : value.slice(0, separator)
+		const timePart = separator === -1 ? '' : value.slice(separator + 1)
+		this._date = new VPropertyDateValue().deserialize(datePart)
+		this._time = new VPropertyTimeValue().deserialize(timePart)
+		if (separator === -1) this._time.clearSource()
 		return this
 	}
 
-	serialize(): string {
-		return `${this._date.serialize()}T${this._time.serialize()}`
+	/** Each part keeps its own original text until that part is edited. */
+	serialize(version: VCardVersion = VCardVersion.V4_0): string {
+		const date = this._date.serialize(version)
+		const time = this._time.serialize(version)
+		return time !== '' || this._time.source !== null ? `${date}T${time}` : date
+	}
+
+	/** Stop writing the original text, so the next serialize uses the standard form. */
+	clearSource(): void {
+		this._date.clearSource()
+		this._time.clearSource()
 	}
 
 	type(): string {

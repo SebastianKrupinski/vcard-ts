@@ -3,6 +3,8 @@ import { decodeParameterValue, encodeParameters } from './codecs/parameterValue'
 import { decodePropertyValue, encodePropertyValue } from './codecs/propertyValue'
 import { foldContentLine, normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
 import { VPropertyBase } from './properties/VPropertyBase'
+import { VPropertyTimeValue } from './properties/VPropertyTimeValue'
+import { VParameterValueOptions } from './parameters/VParameterTypes'
 import type { VPropertyBaseInterface } from './properties/VPropertyInterfaces'
 import { VCardInterface, VCardVersion } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
@@ -181,23 +183,33 @@ function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 	return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
 }
 
-export function serializeProperty(property: VPropertyBaseInterface<unknown>): string {
+export function serializeProperty(
+	property: VPropertyBaseInterface<unknown>,
+	version: VCardVersion = VCardVersion.V4_0,
+): string {
 	const group = property.hasGroup ? `${property.group}.` : ''
 	const parameters = encodeParameters(property.params)
 	const header = `${group}${property.name}${parameters ? `;${parameters}` : ''}`
 
-	return `${header}:${serializePropertyValue(property.value)}`
+	return `${header}:${serializePropertyValue(property, version)}`
 }
 
-function serializePropertyValue(value: unknown): string {
+function serializePropertyValue(property: VPropertyBaseInterface<unknown>, version: VCardVersion): string {
+	const value = property.value
 	if (value === null || value === undefined) return ''
 	if (typeof value === 'string') return encodePropertyValue(value)
 	if (Array.isArray(value)) {
 		return value.map(item => encodePropertyValue(String(item))).join(',')
 	}
+	if (value instanceof VPropertyTimeValue) {
+		// Without VALUE=time, a time needs its T to be told apart from a date.
+		const text = value.serialize(version)
+		const declaredAsTime = property.params.VALUE?.value.toUpperCase() === VParameterValueOptions.TIME
+		return declaredAsTime || text === '' || text.startsWith('T') ? text : `T${text}`
+	}
 	if (typeof value === 'object' && 'serialize' in value
 		&& typeof value.serialize === 'function') {
-		return value.serialize()
+		return value.serialize(version)
 	}
 	return String(value)
 }
@@ -214,7 +226,7 @@ function serializeCard(card: VCardInterface): string {
 		`VERSION:${card.version}`,
 		...card.properties
 			.filter(property => property.name.toUpperCase() !== 'VERSION')
-			.map(property => foldContentLine(serializeProperty(property))),
+			.map(property => foldContentLine(serializeProperty(property, card.version))),
 		'END:VCARD',
 	]
 

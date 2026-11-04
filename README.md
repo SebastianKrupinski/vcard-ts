@@ -122,6 +122,27 @@ if (address) {
 const output = serialize(card)
 ```
 
+## Dates and times
+
+Date and time properties expose their fields, such as `year`, `month`, `hour`,
+and `offset` (in minutes). Fields that a value doesn't include are `null`, so
+`BDAY:--0412` has no `year`.
+
+```ts
+const birthday = card.birthDay?.value
+
+console.log(birthday?.month)
+console.log(birthday?.source) // the original text, such as --0412
+```
+
+A value that hasn't changed is written back exactly as it was read. Once you
+edit a value, or change `card.version`, it's written in the standard form for
+the card's version: extended for 3.0 (`1985-04-12T10:22:00Z`) and basic for 4.0
+(`19850412T102200Z`).
+
+Text that isn't a valid date, such as `BDAY:garbage`, leaves the fields `null`
+but stays available through `source` and is still written back unchanged.
+
 ## Generic property access
 
 Use `first` and `all` for registered properties without a named getter,

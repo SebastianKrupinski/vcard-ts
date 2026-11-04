@@ -1,3 +1,5 @@
+import { formatDate, keepableSource, parseDate } from "../codecs/temporal"
+import { VCardVersion } from "../VCardInterfaces"
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
 
 export class VPropertyDateValue {
@@ -5,71 +7,70 @@ export class VPropertyDateValue {
 	private _year: number | null
 	private _month: number | null
 	private _day: number | null
+	private _source: string | null = null
 
 	constructor(year?: number | null, month?: number | null, day?: number | null) {
-	       this._year = year ?? null
-	       this._month = month ?? null
-	       this._day = day ?? null
+		this._year = year ?? null
+		this._month = month ?? null
+		this._day = day ?? null
 	}
 
 	deserialize(value: string): VPropertyDateValue {
-		// possible formats: 19850412, 1985-04, 1985, --0412, ---12
-		const dayOnly = value.match(/^---(\d{2})$/)
-		if (dayOnly) {
-			this._year = null
-			this._month = null
-			this._day = parseInt(dayOnly[1])
-			return this
-		}
-
-		const regex = /^(\d{4}|--)?-?(\d{2})?-?(\d{2})?$/
-		const match = value.match(regex)
-		if (match) {
-			this._year = match[1] && match[1] !== '--' ? parseInt(match[1]) : null
-			this._month = match[2] ? parseInt(match[2]) : null
-			this._day = match[3] ? parseInt(match[3]) : null
-		} else {
-			this._year = null
-			this._month = null
-			this._day = null
-		}
+		const fields = parseDate(value)
+		this._year = fields?.year ?? null
+		this._month = fields?.month ?? null
+		this._day = fields?.day ?? null
+		this._source = keepableSource(value)
 		return this
 	}
 
-	serialize(): string {
-		return [
-			this._year !== null ? String(this._year).padStart(4, '0') : '',
-			this._month !== null ? String(this._month).padStart(2, '0') : '',
-			this._day !== null ? String(this._day).padStart(2, '0') : '',
-		].join('-')
+	/** Return the text this value was read from, or the standard form once edited. */
+	serialize(version: VCardVersion = VCardVersion.V4_0): string {
+		return this._source ?? formatDate(
+			{ year: this._year, month: this._month, day: this._day },
+			version === VCardVersion.V3_0,
+		)
+	}
+
+	/** Stop writing the original text, so the next serialize uses the standard form. */
+	clearSource(): void {
+		this._source = null
 	}
 
 	type(): string {
 		return VParameterValueOptions.DATE
 	}
 
+	/** The text this value was read from, or null if it was created or edited in code. */
+	get source(): string | null {
+		return this._source
+	}
+
 	get year(): number | null {
-	       return this._year
+		return this._year
 	}
 
 	set year(value: number | null) {
-	       this._year = value
+		this._year = value
+		this._source = null
 	}
 
 	get month(): number | null {
-	       return this._month
+		return this._month
 	}
 
 	set month(value: number | null) {
-	       this._month = value
+		this._month = value
+		this._source = null
 	}
 
 	get day(): number | null {
-	       return this._day
+		return this._day
 	}
 
 	set day(value: number | null) {
-	       this._day = value
+		this._day = value
+		this._source = null
 	}
 
 }

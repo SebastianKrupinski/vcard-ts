@@ -86,6 +86,22 @@ describe('round trip against source text', () => {
   })
 
   it.each<[Version, string]>([
+    ['3.0', 'REV:1995-10-31T22:27:10Z'],
+    ['3.0', 'BDAY:1996-04-15T10:22:00'],
+    ['3.0', 'BDAY:1953-10-15T23:10:00Z'],
+    ['4.0', 'BDAY:19850412'],
+    ['4.0', 'BDAY:1985'],
+    ['4.0', 'BDAY:1985-04'],
+    ['4.0', 'BDAY:--0412'],
+    ['4.0', 'BDAY:---12'],
+    ['4.0', 'BDAY:T1022'],
+    ['4.0', 'BDAY:19850412T102200Z'],
+    ['4.0', 'ANNIVERSARY:20090808T1430-0500'],
+    ['3.0', 'REV:1997-11-15'],
+    ['4.0', 'BDAY:1985-04-12'],
+    ['4.0', 'BDAY:19850412T'],
+    ['4.0', 'BDAY:garbage'],
+    ['4.0', 'BDAY:19851332'],
     ['3.0', 'REV:19951031T222710Z'],
     ['4.0', 'REV:19951031T222710Z'],
     ['3.0', 'TZ:-05:00'],
@@ -118,19 +134,6 @@ describe('round trip against source text', () => {
 // bug is fixed, then fails to say the case should move up to the passing list.
 describe('known round-trip bugs', () => {
   it.fails.each<[Version, string]>([
-    // Temporal values
-    ['3.0', 'REV:1995-10-31T22:27:10Z'],
-    ['3.0', 'BDAY:1996-04-15T10:22:00'],
-    ['3.0', 'BDAY:1953-10-15T23:10:00Z'],
-    ['4.0', 'BDAY:19850412'],
-    ['4.0', 'BDAY:1985'],
-    ['4.0', 'BDAY:1985-04'],
-    ['4.0', 'BDAY:--0412'],
-    ['4.0', 'BDAY:---12'],
-    ['4.0', 'BDAY:T1022'],
-    ['4.0', 'BDAY:19850412T102200Z'],
-    ['4.0', 'ANNIVERSARY:20090808T1430-0500'],
-
     // Parameters
     ['3.0', 'TEL;TYPE=work;TYPE=voice:+1'],
     ['4.0', 'TEL;TYPE="work","voice":+1'],
@@ -151,8 +154,6 @@ describe('known round-trip bugs', () => {
   })
 
   it.fails.each<[Version, string]>([
-    ['4.0', 'BDAY:garbage'],
-    ['4.0', 'BDAY:19851332'],
     ['4.0', 'GEO:not-a-geo'],
     ['4.0', 'a.b.NOTE:x'],
     ['4.0', 'NOTE:a\\:b'],
