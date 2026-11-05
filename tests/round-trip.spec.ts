@@ -3,8 +3,68 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { deserializeCard, serialize } from '../src/VCard'
+import { VParameterListObject, VParameterObject } from '../src/parameters/VParameterObject'
 
 type Version = '3.0' | '4.0'
+
+describe('trailing whitespace in property values', () => {
+  it.each(['3.0', '4.0'] as const)('preserves spaces and tabs through %s round trips', version => {
+    for (const value of ['one  ', 'one\t', '  \t', '', 'one\r\n  two \t']) {
+      const source = card(version, `NOTE:${value}`)
+      const parsed = deserializeCard(source)
+      const expected = value.replace('\r\n ', '')
+
+      expect(parsed.first('NOTE')!.value).toBe(expected)
+      expectToRoundTrip(source)
+      expect(deserializeCard(serialize(parsed)).first('NOTE')!.value).toBe(expected)
+    }
+  })
+
+  it.each(['3.0', '4.0'] as const)('preserves trailing whitespace after editing and folding in %s', version => {
+    const parsed = deserializeCard(card(version, 'NOTE:original'))
+    const value = `${'long text '.repeat(12)} \t`
+    parsed.first('NOTE')!.value = value
+
+    const encoded = serialize(parsed)
+    expect(encoded).toContain('\r\n ')
+    expect(deserializeCard(encoded).first('NOTE')!.value).toBe(value)
+  })
+
+  it('preserves the final collection item and unknown property whitespace', () => {
+    const source = card('4.0', 'CATEGORIES:one,two \t\r\nX-CUSTOM:three  ')
+    const parsed = deserializeCard(source)
+
+    expect(parsed.first('CATEGORIES')!.value).toEqual(['one', 'two \t'])
+    expect(parsed.first('X-CUSTOM')!.value).toBe('three  ')
+    expectToRoundTrip(source)
+  })
+
+  it('still rejects a nested card marker followed by whitespace', () => {
+    expect(() => deserializeCard(card('4.0', 'BEGIN:VCARD  '))).toThrow('nested card marker')
+  })
+})
+
+describe('newlines in edited text', () => {
+  it.each(['\r', '\r\n', '\n'])('keeps newline %j inside property and parameter values', newline => {
+    const parsed = deserializeCard(card('4.0', 'NOTE;LABEL=original;TYPE=work:original'))
+    const note = parsed.first('NOTE')!
+    const value = `one${newline}EMAIL:evil@example.com`
+    note.value = value
+    note.params.LABEL!.value = value
+    ;(note.params.TYPE as VParameterListObject).list = [value]
+    note.params['X-LABEL'] = new VParameterObject('X-LABEL', value)
+
+    const encoded = serialize(parsed)
+    expect(encoded.replace(/\r\n/g, '')).not.toMatch(/[\r\n]/)
+    const decoded = deserializeCard(encoded)
+    const decodedNote = decoded.first('NOTE')!
+    expect(decoded.all('EMAIL')).toHaveLength(0)
+    expect(decodedNote.value).toBe('one\nEMAIL:evil@example.com')
+    expect(decodedNote.params.LABEL!.value).toBe('one\nEMAIL:evil@example.com')
+    expect(decodedNote.params.TYPE!.list).toEqual(['one\nEMAIL:evil@example.com'])
+    expect(decodedNote.params['X-LABEL'].value).toBe('one\nEMAIL:evil@example.com')
+  })
+})
 
 function fixture(path: string): string {
   return readFileSync(new URL(`./fixtures/${path}`, import.meta.url), 'utf8')
@@ -86,6 +146,22 @@ describe('round trip against source text', () => {
   })
 
   it.each<[Version, string]>([
+    ['3.0', 'REV:1995-10-31T22:27:10Z'],
+    ['3.0', 'BDAY:1996-04-15T10:22:00'],
+    ['3.0', 'BDAY:1953-10-15T23:10:00Z'],
+    ['4.0', 'BDAY:19850412'],
+    ['4.0', 'BDAY:1985'],
+    ['4.0', 'BDAY:1985-04'],
+    ['4.0', 'BDAY:--0412'],
+    ['4.0', 'BDAY:---12'],
+    ['4.0', 'BDAY:T1022'],
+    ['4.0', 'BDAY:19850412T102200Z'],
+    ['4.0', 'ANNIVERSARY:20090808T1430-0500'],
+    ['3.0', 'REV:1997-11-15'],
+    ['4.0', 'BDAY:1985-04-12'],
+    ['4.0', 'BDAY:19850412T'],
+    ['4.0', 'BDAY:garbage'],
+    ['4.0', 'BDAY:19851332'],
     ['3.0', 'REV:19951031T222710Z'],
     ['4.0', 'REV:19951031T222710Z'],
     ['3.0', 'TZ:-05:00'],
@@ -101,6 +177,17 @@ describe('round trip against source text', () => {
     ['4.0', 'KEY;VALUE=text:OPENPGP4FPR:ABC'],
     ['4.0', 'TEL;VALUE=uri:tel:+1-555-555-5555;ext=2'],
     ['4.0', 'TEL;TYPE=work,voice:+1'],
+    ['3.0', 'TEL;TYPE=work;TYPE=voice:+1'],
+    ['3.0', 'TEL;TYPE=CELL;TYPE=VOICE;TYPE=pref:+1'],
+    ['4.0', 'TEL;TYPE="work","voice":+1'],
+    ['4.0', 'TEL;TYPE="work,voice":+1'],
+    ['4.0', 'TEL;TYPE=work,"a:b":+1'],
+    ['4.0', 'NOTE;TYPE="a:b":x'],
+    ['4.0', 'NOTE;X-A="a^nb":x'],
+    ['4.0', 'NOTE;X-A=a,b:x'],
+    ['4.0', 'NOTE;X-A="a","b":x'],
+    ['4.0', 'EMAIL;PID=1.1,2.1:jane@example.com'],
+    ['4.0', 'ADR;LABEL="1 Main St, Town":;;1 Main St;Town;;;'],
     ['4.0', 'EMAIL;PID="1.1,2.1":jane@example.com'],
     ['4.0', 'N;SORT-AS="Doe,Jane":Doe;Jane;;;'],
     ['4.0', 'ORG:Acme\\, Inc;Sales\\;EMEA;West'],
@@ -118,24 +205,6 @@ describe('round trip against source text', () => {
 // bug is fixed, then fails to say the case should move up to the passing list.
 describe('known round-trip bugs', () => {
   it.fails.each<[Version, string]>([
-    // Temporal values
-    ['3.0', 'REV:1995-10-31T22:27:10Z'],
-    ['3.0', 'BDAY:1996-04-15T10:22:00'],
-    ['3.0', 'BDAY:1953-10-15T23:10:00Z'],
-    ['4.0', 'BDAY:19850412'],
-    ['4.0', 'BDAY:1985'],
-    ['4.0', 'BDAY:1985-04'],
-    ['4.0', 'BDAY:--0412'],
-    ['4.0', 'BDAY:---12'],
-    ['4.0', 'BDAY:T1022'],
-    ['4.0', 'BDAY:19850412T102200Z'],
-    ['4.0', 'ANNIVERSARY:20090808T1430-0500'],
-
-    // Parameters
-    ['3.0', 'TEL;TYPE=work;TYPE=voice:+1'],
-    ['4.0', 'TEL;TYPE="work","voice":+1'],
-    ['4.0', 'NOTE;TYPE="a:b":x'],
-
     // Inline binary on properties that can also hold a URI or text
     ['3.0', 'KEY;ENCODING=b:AAAA'],
 
@@ -151,8 +220,6 @@ describe('known round-trip bugs', () => {
   })
 
   it.fails.each<[Version, string]>([
-    ['4.0', 'BDAY:garbage'],
-    ['4.0', 'BDAY:19851332'],
     ['4.0', 'GEO:not-a-geo'],
     ['4.0', 'a.b.NOTE:x'],
     ['4.0', 'NOTE:a\\:b'],

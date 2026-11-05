@@ -1,3 +1,6 @@
+import { keepableSource } from "../codecs/contentLine"
+import { formatDate, formatTime, parseDate, parseTime } from "../codecs/temporal"
+import { VCardVersion } from "../VCardInterfaces"
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
 
 export class VPropertyTimestampValue {
@@ -9,6 +12,7 @@ export class VPropertyTimestampValue {
 	private _minute: number | null = null
 	private _second: number | null = null
 	private _offset: number | null = null // in minutes, 0 for Z, null for local
+	private _source: string | null = null
 
 	constructor(
 		year: number | null = null,
@@ -29,76 +33,52 @@ export class VPropertyTimestampValue {
 	}
 
 	deserialize(value: string): VPropertyTimestampValue {
-		// Matches: 19961022T140000, 19961022T140000Z, 19961022T140000-05, 19961022T140000-0500
-		const regex = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z|([+-])(\d{2})(\d{2})?)?$/
-		const match = value.match(regex)
-		if (match) {
-			this._year = parseInt(match[1])
-			this._month = parseInt(match[2])
-			this._day = parseInt(match[3])
-			this._hour = parseInt(match[4])
-			this._minute = parseInt(match[5])
-			this._second = parseInt(match[6])
-			if (match[7] === 'Z') {
-				this._offset = 0
-			} else if (match[7]) {
-				const sign = match[8] === '+' ? 1 : -1
-				const hours = parseInt(match[9])
-				const minutes = match[10] ? parseInt(match[10]) : 0
-				this._offset = sign * (hours * 60 + minutes)
-			} else {
-				this._offset = null
-			}
-		} else {
-			this._year = null
-			this._month = null
-			this._day = null
-			this._hour = null
-			this._minute = null
-			this._second = null
-			this._offset = null
-		}
+		// Matches the basic and extended forms, such as 19961022T140000-0500 and 1996-10-22T14:00:00Z
+		const [datePart, timePart] = value.split('T', 2)
+		const date = parseDate(datePart)
+		const time = timePart === undefined ? null : parseTime(timePart)
+		const complete = date?.year != null && date.month !== null && date.day !== null
+			&& time?.hour != null && time.minute !== null && time.second !== null
+
+		this._year = complete ? date.year : null
+		this._month = complete ? date.month : null
+		this._day = complete ? date.day : null
+		this._hour = complete ? time.hour : null
+		this._minute = complete ? time.minute : null
+		this._second = complete ? time.second : null
+		this._offset = complete ? time.offset : null
+		this._source = keepableSource(value)
 		return this
 	}
 
-	serialize(): string {
-		if (
-			this._year === null
-			|| this._month === null
-			|| this._day === null
-			|| this._hour === null
-			|| this._minute === null
-			|| this._second === null
-		) {
-			return ''
+	/** Return the text this value was read from, or the standard form once edited. */
+	serialize(version: VCardVersion = VCardVersion.V4_0): string {
+		if (this._source !== null) return this._source
+
+		const fields = [this._year, this._month, this._day, this._hour, this._minute, this._second]
+		if (fields.every(field => field === null)) return ''
+		if (fields.some(field => field === null)) {
+			throw new Error('Invalid timestamp value: every field except the offset is required')
 		}
-		const date = String(this._year).padStart(4, '0')
-			+ String(this._month).padStart(2, '0')
-			+ String(this._day).padStart(2, '0')
-		const time
-			= 'T'
-			+ String(this._hour).padStart(2, '0')
-			+ String(this._minute).padStart(2, '0')
-			+ String(this._second).padStart(2, '0')
-		let offsetStr = ''
-		if (this._offset === 0) {
-			offsetStr = 'Z'
-		} else if (this._offset !== null) {
-			const sign = this._offset >= 0 ? '+' : '-'
-			const abs = Math.abs(this._offset)
-			const hours = Math.floor(abs / 60)
-			const minutes = abs % 60
-			if (minutes === 0) {
-				offsetStr = `${sign}${String(hours).padStart(2, '0')}`
-			} else {
-				offsetStr = `${sign}${String(hours).padStart(2, '0')}${String(minutes).padStart(2, '0')}`
-			}
-		}
-		return date + time + offsetStr
+
+		const extended = version === VCardVersion.V3_0
+		const date = formatDate({ year: this._year, month: this._month, day: this._day }, extended)
+		const time = formatTime({ hour: this._hour, minute: this._minute, second: this._second, offset: this._offset }, extended)
+		return `${date}T${time}`
+	}
+
+	/** Stop writing the original text, so the next serialize uses the standard form. */
+	clearSource(): void {
+		this._source = null
 	}
 
 	type(): string {
 		return VParameterValueOptions.TIMESTAMP
+	}
+
+	/** The text this value was read from, or null if it was created or edited in code. */
+	get source(): string | null {
+		return this._source
 	}
 
 	get year(): number | null {
@@ -107,6 +87,7 @@ export class VPropertyTimestampValue {
 
 	set year(value: number | null) {
 		this._year = value
+		this._source = null
 	}
 
 	get month(): number | null {
@@ -115,6 +96,7 @@ export class VPropertyTimestampValue {
 
 	set month(value: number | null) {
 		this._month = value
+		this._source = null
 	}
 
 	get day(): number | null {
@@ -123,6 +105,7 @@ export class VPropertyTimestampValue {
 
 	set day(value: number | null) {
 		this._day = value
+		this._source = null
 	}
 
 	get hour(): number | null {
@@ -131,6 +114,7 @@ export class VPropertyTimestampValue {
 
 	set hour(value: number | null) {
 		this._hour = value
+		this._source = null
 	}
 
 	get minute(): number | null {
@@ -139,6 +123,7 @@ export class VPropertyTimestampValue {
 
 	set minute(value: number | null) {
 		this._minute = value
+		this._source = null
 	}
 
 	get second(): number | null {
@@ -147,6 +132,7 @@ export class VPropertyTimestampValue {
 
 	set second(value: number | null) {
 		this._second = value
+		this._source = null
 	}
 
 	get offset(): number | null {
@@ -155,6 +141,7 @@ export class VPropertyTimestampValue {
 
 	set offset(value: number | null) {
 		this._offset = value
+		this._source = null
 	}
 
 }

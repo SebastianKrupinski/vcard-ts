@@ -1,3 +1,5 @@
+import { normalizeNewlines } from './contentLine'
+
 export function decodeParameterValue(value: string): string {
 	let decoded = ''
 	for (let index = 0; index < value.length; index++) {
@@ -16,18 +18,42 @@ export function decodeParameterValue(value: string): string {
 }
 
 export function encodeParameterValue(value: string): string {
-	return value
+	return normalizeNewlines(value)
 		.replace(/\^/g, '^^')
 		.replace(/\n/g, '^n')
 		.replace(/"/g, "^'")
 }
 
-export function encodeParameters(parameters: VParameterCollectionInterface): string {
-	return Object.values(parameters).map(parameter => {
-		const name = parameter.name.toUpperCase()
-		const value = encodeParameterValue(parameter.value)
-		const needsQuotes = name !== 'TYPE' && /[,:;]/.test(value)
-		return `${name}=${needsQuotes ? `"${value}"` : value}`
-	}).join(';')
+function splitOnUnquotedCommas(value: string): string[] {
+	const items: string[] = []
+	let current = ''
+	let inQuotes = false
+	for (const character of value) {
+		if (character === '"') inQuotes = !inQuotes
+		if (character === ',' && !inQuotes) {
+			items.push(current)
+			current = ''
+		} else {
+			current += character
+		}
+	}
+	items.push(current)
+	return items
 }
-import type { VParameterCollectionInterface } from '../parameters/VParameterInterfaces'
+
+function decodeParameterItem(item: string): string {
+	const unquoted = item.length >= 2 && item.startsWith('"') && item.endsWith('"')
+		? item.slice(1, -1)
+		: item
+	return decodeParameterValue(unquoted)
+}
+
+/** Decode one parameter's text as written in a content line, such as "a","b". */
+export function decodeParameterItems(source: string): string[] {
+	return splitOnUnquotedCommas(source).map(decodeParameterItem)
+}
+
+export function encodeParameterItem(value: string): string {
+	const encoded = encodeParameterValue(value)
+	return encoded === '' || /[,:;]/.test(encoded) ? `"${encoded}"` : encoded
+}

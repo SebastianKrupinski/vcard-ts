@@ -3,7 +3,7 @@ export * from './VCardInterfaces'
 export * from './VCardObjects'
 
 export * from './parameters/VParameterInterfaces'
-export * from './parameters/VParameterObject'
+export { VParameterCollection, VParameterListObject, VParameterObject } from './parameters/VParameterObject'
 export * from './parameters/VParameterTypes'
 
 export * from './properties/VPropertyInterfaces'

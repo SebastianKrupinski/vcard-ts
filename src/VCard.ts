@@ -1,13 +1,12 @@
-import { VParameterCollection, VParameterObject } from './parameters/VParameterObject'
-import { decodeParameterValue, encodeParameters } from './codecs/parameterValue'
-import { decodePropertyValue, encodePropertyValue } from './codecs/propertyValue'
+import { decodeProperty, encodeProperty } from './codecs/property'
 import { foldContentLine, normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
-import { VPropertyBase } from './properties/VPropertyBase'
 import type { VPropertyBaseInterface } from './properties/VPropertyInterfaces'
 import { VCardInterface, VCardVersion } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
-import { propertyTypes, propertyCardinalities } from './properties/VPropertyTypes'
+import { propertyCardinalities } from './properties/VPropertyTypes'
 import { VPropertyCollection } from './properties/VPropertyCollection'
+
+export { encodeProperty as serializeProperty } from './codecs/property'
 
 /**
  *
@@ -56,15 +55,14 @@ export function deserializeCard(data: string): VCard {
 	const lines = unfoldContentLines(data)
 	const properties = new VPropertyCollection()
 
-	for (const [index, rawLine] of lines.entries()) {
-		const line = rawLine.trimEnd()
+	for (const [index, line] of lines.entries()) {
 		if (line.length === 0) continue
 		if (index === 0 || index === lines.length - 1) continue
-		if (/^(BEGIN|END):VCARD$/i.test(line)) {
+		if (/^(BEGIN|END):VCARD\s*$/i.test(line)) {
 			throw new Error('Invalid vCard data: nested card marker')
 		}
 
-		const prop = deserializeProperty(line)
+		const prop = decodeProperty(line)
 		if (!prop) continue
 
 		properties.push(prop)
@@ -137,71 +135,6 @@ function countLogicalProperties(properties: VPropertyBaseInterface[]): number {
 	return count + alternativeIds.size
 }
 
-/**
- *
- * @param data
- */
-function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
-	let name: string | null = null
-	let group: string | null = null
-	const params = new VParameterCollection()
-	let remaining: string
-	// extract the property name and group (if any)
-	({ name, group, remaining } = extractPropertyHeader(data))
-	// if the next segment start with ';', we have parameters
-	while (remaining.startsWith(';')) {
-		let result: { name: string; value: string; remainder: string } | null
-		// Strip the leading semicolon and extract the next parameter
-		remaining = remaining.substring(1)
-		result = extractPropertyParameter(remaining)
-		if (!result) {
-			throw new Error(`Invalid property parameter: ${data}`)
-		}
-		remaining = result?.remainder.trimStart()
-		const parameterName = result.name.toUpperCase()
-		const rawParameterValue = result.value.startsWith('"') && result.value.endsWith('"')
-			? result.value.slice(1, -1)
-			: result.value
-		const parameterValue = decodeParameterValue(rawParameterValue)
-		params[parameterName] = new VParameterObject(parameterName, parameterValue)
-	}
-	// the remaining part should start with ':', followed by the value
-	const rawValue = remaining.slice(1)
-	// instantiate the property object
-	if (!name) {
-		return new VPropertyBase('', decodePropertyValue(rawValue), group, params)
-	}
-	const PropertyType = propertyTypes[name.toUpperCase()]
-	if (PropertyType === VPropertyBase) {
-		return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
-	}
-	if (PropertyType) {
-		return new PropertyType(name, rawValue, group, params)
-	}
-	return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
-}
-
-export function serializeProperty(property: VPropertyBaseInterface<unknown>): string {
-	const group = property.hasGroup ? `${property.group}.` : ''
-	const parameters = encodeParameters(property.params)
-	const header = `${group}${property.name}${parameters ? `;${parameters}` : ''}`
-
-	return `${header}:${serializePropertyValue(property.value)}`
-}
-
-function serializePropertyValue(value: unknown): string {
-	if (value === null || value === undefined) return ''
-	if (typeof value === 'string') return encodePropertyValue(value)
-	if (Array.isArray(value)) {
-		return value.map(item => encodePropertyValue(String(item))).join(',')
-	}
-	if (typeof value === 'object' && 'serialize' in value
-		&& typeof value.serialize === 'function') {
-		return value.serialize()
-	}
-	return String(value)
-}
-
 export function serialize(cards: VCardInterface | VCardInterface[]): string {
 	return (Array.isArray(cards) ? cards : [cards])
 		.map(serializeCard)
@@ -214,63 +147,11 @@ function serializeCard(card: VCardInterface): string {
 		`VERSION:${card.version}`,
 		...card.properties
 			.filter(property => property.name.toUpperCase() !== 'VERSION')
-			.map(property => foldContentLine(serializeProperty(property))),
+			.map(property => foldContentLine(encodeProperty(property, card.version))),
 		'END:VCARD',
 	]
 
 	return `${lines.join('\r\n')}\r\n`
-}
-
-/**
- *
- * @param data
- */
-function extractPropertyHeader(data: string, options?: {}): { name: string; group: string | null; remaining: string } {
-
-	const header = data.match(/^(.*?)[\:;]/)?.[1]
-	if (!header) {
-		throw new Error('Invalid card property line: ' + data)
-	}
-	const remaining = data.slice(header.length) // +1 to skip the ':' or ';'
-	let propertyName: string | null = null
-	let propertyGroup: string | null = null
-	if (header.indexOf('.') >= 1) {
-		[propertyGroup, propertyName] = header.split('.', 2)
-	} else {
-		propertyName = header
-		propertyGroup = null
-	}
-
-	return { name: propertyName, group: propertyGroup, remaining }
-}
-
-/**
- * Extracts the first parameter from a vCard property string.
- *
- * @param data The vCard line starting with the parameter (e.g., 'TYPE=WORK;...').
- * @return An object with the name, value, and the new remainder, or null if no parameter is found.
- */
-function extractPropertyParameter(data: string): { name: string; value: string; remainder: string } | null {
-	// Regex to find param name and its value (quoted or unquoted)
-	const paramRegex = /^([a-zA-Z0-9-]+)=("(?:[^"]*)"|[^;:]+)/
-
-	const match = data.match(paramRegex)
-
-	if (match) {
-		// match[0] is the full matched string (e.g., "TYPE=home")
-		// match[1] is the parameter name (Capture Group 1)
-		// match[2] is the parameter value (Capture Group 2)
-		const name = match[1]
-		const value = match[2]
-
-		// The new remainder is the part of the string after the full match
-		const newRemainder = data.substring(match[0].length)
-
-		return { name, value, remainder: newRemainder }
-	}
-
-	// No parameter found at the start of the string
-	return null
 }
 
 /**

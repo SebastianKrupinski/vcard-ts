@@ -16,7 +16,7 @@ function fixture(path: string): string {
 function comparableCard(card: ReturnType<typeof deserializeCard>) {
   return {
     version: card.version,
-    properties: card.properties.map(serializeProperty),
+    properties: card.properties.map(property => serializeProperty(property, card.version)),
   }
 }
 

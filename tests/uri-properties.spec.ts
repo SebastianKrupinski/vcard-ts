@@ -1,10 +1,33 @@
 import { describe, expect, it } from 'vitest'
 
-import { deserializeCard, serialize } from '../src/VCard'
+import { deserializeCard, serialize, serializeProperty } from '../src/VCard'
 import { VPropertyUriType } from '../src/properties/VPropertyUriType'
 import { VPropertyUriValue } from '../src/properties/VPropertyUriValue'
 
 describe('URI properties', () => {
+  it.each(['\r', '\n', '\r\n'])('rejects newline %j in an edited URI reference', newline => {
+    const card = deserializeCard('BEGIN:VCARD\r\nVERSION:4.0\r\nFN:Jane Doe\r\nURL:https://example.com\r\nEND:VCARD')
+    const property = card.first('URL')!
+    const uri: unknown = property.value
+    if (!(uri instanceof VPropertyUriValue)) throw new Error('Expected a URI value')
+    uri.reference = `//example.com${newline}EMAIL:evil@example.com`
+
+    expect(() => serializeProperty(property)).toThrow('Invalid property line: unescaped line break')
+    expect(() => serialize(card)).toThrow('Invalid property line: unescaped line break')
+  })
+
+  it.each(['\r', '\n', '\r\n'])('rejects newline %j in a newly created URI', newline => {
+    const property = new VPropertyUriType('URL', `https://example.com${newline}EMAIL:evil@example.com`)
+
+    expect(() => serializeProperty(property)).toThrow('Invalid property line: unescaped line break')
+  })
+
+  it('preserves percent-encoded URI line breaks', () => {
+    const property = new VPropertyUriType('URL', 'https://example.com/path%0D%0Avalue')
+
+    expect(serializeProperty(property)).toBe('URL:https://example.com/path%0D%0Avalue')
+  })
+
   it('preserves URI content after the first colon', () => {
     const card = deserializeCard([
       'BEGIN:VCARD',

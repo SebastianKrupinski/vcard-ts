@@ -24,7 +24,7 @@ export class VPropertyTemporalType extends VPropertyBase<VPropertyDateValue|VPro
 				if (paramValue === VParameterValueOptions.DATE_TIME) return 'datetime'
 				if (paramValue === VParameterValueOptions.DATE) return 'date'
 				if (paramValue === VParameterValueOptions.TIME) return 'time'
-				if (propertyName === 'REV' || propertyName === 'CREATED') return 'timestamp'
+				if ((propertyName === 'REV' || propertyName === 'CREATED') && propertyValue.includes('T')) return 'timestamp'
 				if (propertyValue.startsWith('T')) {
 					return 'time'
 				} else if (propertyValue.includes('T')) {

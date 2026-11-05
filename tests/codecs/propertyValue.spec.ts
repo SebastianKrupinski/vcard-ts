@@ -11,6 +11,14 @@ import { VPropertyOrganizationValue } from '../../src/properties/VPropertyOrgani
 import { VPropertyGenderValue } from '../../src/properties/VPropertyGenderValue'
 
 describe('property value codec', () => {
+  it.each(['\r', '\r\n', '\n'])('normalizes and escapes newline %j', newline => {
+    const encoded = encodePropertyValue(`one${newline}EMAIL:evil@example.com`)
+
+    expect(encoded).toBe('one\\nEMAIL:evil@example.com')
+    expect(encoded).not.toMatch(/[\r\n]/)
+    expect(decodePropertyValue(encoded)).toBe('one\nEMAIL:evil@example.com')
+  })
+
   it('encodes and decodes text escape sequences', () => {
     const value = 'Line one\nDoe, Jane; C:\\Contacts'
     const encoded = 'Line one\\nDoe\\, Jane\\; C:\\\\Contacts'
