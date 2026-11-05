@@ -3,6 +3,27 @@ import { decodeParameters, encodeParameters } from '../../src/codecs/parameter'
 import { VParameterListObject, VParameterObject } from '../../src/parameters/VParameterObject'
 
 describe('parameter codec', () => {
+  it('round-trips an empty scalar parameter', () => {
+    const encoded = encodeParameters({ LABEL: new VParameterObject('LABEL', '') })
+
+    expect(encoded).toBe('LABEL=""')
+    const { params } = decodeParameters(`;${encoded}:x`)
+    expect(params.LABEL.value).toBe('')
+    expect(encodeParameters(params)).toBe(encoded)
+  })
+
+  it.each<[string[]]>([[['']], [['', 'work']], [['work', '']], [['', 'work', '']]])('round-trips empty list items in %j', items => {
+    const encoded = encodeParameters({ TYPE: new VParameterListObject('TYPE', items) })
+    const { params } = decodeParameters(`;${encoded}:x`)
+
+    expect(params.TYPE?.list).toEqual(items)
+    expect(encodeParameters(params)).toBe(encoded)
+  })
+
+  it('omits a list with no items', () => {
+    expect(encodeParameters({ TYPE: new VParameterListObject('TYPE', []) })).toBe('')
+  })
+
   it.each(['a;TYPE=work', 'a:EMAIL:evil@example.com', 'a\r\nEMAIL:evil@example.com'])('ignores custom source %j', source => {
     const encoded = encodeParameters({ LABEL: { name: 'LABEL', value: 'safe; desk: north', source: [source] } })
 

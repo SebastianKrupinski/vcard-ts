@@ -55,5 +55,5 @@ export function decodeParameterItems(source: string): string[] {
 
 export function encodeParameterItem(value: string): string {
 	const encoded = encodeParameterValue(value)
-	return /[,:;]/.test(encoded) ? `"${encoded}"` : encoded
+	return encoded === '' || /[,:;]/.test(encoded) ? `"${encoded}"` : encoded
 }

@@ -3,9 +3,16 @@ import { describe, expect, it } from 'vitest'
 import {
   decodeParameterValue,
   encodeParameterValue,
+  encodeParameterItem,
+  decodeParameterItems,
 } from '../../src/codecs/parameterValue'
 
 describe('parameter value codec', () => {
+  it('quotes an empty item so it can be decoded', () => {
+    expect(encodeParameterItem('')).toBe('""')
+    expect(decodeParameterItems(encodeParameterItem(''))).toEqual([''])
+  })
+
   it.each(['\r', '\r\n', '\n'])('normalizes and escapes newline %j', newline => {
     const encoded = encodeParameterValue(`one${newline}EMAIL:evil@example.com`)
 

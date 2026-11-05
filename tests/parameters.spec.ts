@@ -211,6 +211,19 @@ describe('multiple parameter values', () => {
 })
 
 describe('editing parameters', () => {
+  it('round-trips scalar and list parameters edited to contain empty values', () => {
+    const card = deserializeCard('BEGIN:VCARD\r\nVERSION:4.0\r\nFN:Jane Doe\r\nNOTE;LABEL=desk;TYPE=work:x\r\nEND:VCARD')
+    const note = card.first('NOTE')!
+    note.params.LABEL.value = ''
+    note.params.TYPE!.list = ['', 'home', '']
+
+    const encoded = serialize(card)
+    expect(encoded).toContain('NOTE;LABEL="";TYPE="",home,"":x\r\n')
+    const decoded = deserializeCard(encoded).first('NOTE')!
+    expect(decoded.params.LABEL.value).toBe('')
+    expect(decoded.params.TYPE!.list).toEqual(['', 'home', ''])
+  })
+
   const output = (line: string, edit: (parameter: VParameterListObject) => void) => {
     const card = deserializeCard([
       'BEGIN:VCARD',
