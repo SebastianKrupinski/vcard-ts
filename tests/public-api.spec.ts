@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as api from '../src'
+import { encodeProperty } from '../src/codecs/property'
 
 import {
   createCard,
@@ -21,6 +22,14 @@ const CARD = [
 ].join('\r\n')
 
 describe('public API', () => {
+  it('preserves serializeProperty as the public property encoder', () => {
+    expect(api.serializeProperty).toBe(encodeProperty)
+    expect(api.serializeProperty(new VPropertyTextType('NOTE', 'one,two')))
+      .toBe('NOTE:one\\,two')
+    expect(api).not.toHaveProperty('encodeProperty')
+    expect(api).not.toHaveProperty('decodeProperty')
+  })
+
   it('keeps parameter parsing helpers outside the package API', () => {
     expect(api).not.toHaveProperty('parseParameter')
     expect(api).not.toHaveProperty('decodeParameters')

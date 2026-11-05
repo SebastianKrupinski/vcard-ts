@@ -1,14 +1,12 @@
-import { decodeParameters, encodeParameters } from './codecs/parameter'
-import { decodePropertyValue, encodePropertyValue } from './codecs/propertyValue'
+import { decodeProperty, encodeProperty } from './codecs/property'
 import { foldContentLine, normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
-import { VPropertyBase } from './properties/VPropertyBase'
-import { VPropertyTimeValue } from './properties/VPropertyTimeValue'
-import { VParameterValueOptions } from './parameters/VParameterTypes'
 import type { VPropertyBaseInterface } from './properties/VPropertyInterfaces'
 import { VCardInterface, VCardVersion } from './VCardInterfaces'
 import { VCard } from './VCardObjects'
-import { propertyTypes, propertyCardinalities } from './properties/VPropertyTypes'
+import { propertyCardinalities } from './properties/VPropertyTypes'
 import { VPropertyCollection } from './properties/VPropertyCollection'
+
+export { encodeProperty as serializeProperty } from './codecs/property'
 
 /**
  *
@@ -65,7 +63,7 @@ export function deserializeCard(data: string): VCard {
 			throw new Error('Invalid vCard data: nested card marker')
 		}
 
-		const prop = deserializeProperty(line)
+		const prop = decodeProperty(line)
 		if (!prop) continue
 
 		properties.push(prop)
@@ -138,64 +136,6 @@ function countLogicalProperties(properties: VPropertyBaseInterface[]): number {
 	return count + alternativeIds.size
 }
 
-/**
- *
- * @param data
- */
-function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
-	let name: string | null = null
-	let group: string | null = null
-	let remaining: string
-	// Extract the property name and group, then consume its parameter section.
-	({ name, group, remaining } = extractPropertyHeader(data))
-	const { params, remaining: valueSource } = decodeParameters(remaining)
-	// The codec leaves the colon before the property value.
-	const rawValue = valueSource.slice(1)
-	// instantiate the property object
-	if (!name) {
-		return new VPropertyBase('', decodePropertyValue(rawValue), group, params)
-	}
-	const PropertyType = propertyTypes[name.toUpperCase()]
-	if (PropertyType === VPropertyBase) {
-		return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
-	}
-	if (PropertyType) {
-		return new PropertyType(name, rawValue, group, params)
-	}
-	return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
-}
-
-export function serializeProperty(
-	property: VPropertyBaseInterface<unknown>,
-	version: VCardVersion = VCardVersion.V4_0,
-): string {
-	const group = property.hasGroup ? `${property.group}.` : ''
-	const parameters = encodeParameters(property.params)
-	const header = `${group}${property.name}${parameters ? `;${parameters}` : ''}`
-
-	return `${header}:${serializePropertyValue(property, version)}`
-}
-
-function serializePropertyValue(property: VPropertyBaseInterface<unknown>, version: VCardVersion): string {
-	const value = property.value
-	if (value === null || value === undefined) return ''
-	if (typeof value === 'string') return encodePropertyValue(value)
-	if (Array.isArray(value)) {
-		return value.map(item => encodePropertyValue(String(item))).join(',')
-	}
-	if (value instanceof VPropertyTimeValue) {
-		// Without VALUE=time, a time needs its T to be told apart from a date.
-		const text = value.serialize(version)
-		const declaredAsTime = property.params.VALUE?.value.toUpperCase() === VParameterValueOptions.TIME
-		return declaredAsTime || text === '' || text.startsWith('T') ? text : `T${text}`
-	}
-	if (typeof value === 'object' && 'serialize' in value
-		&& typeof value.serialize === 'function') {
-		return value.serialize(version)
-	}
-	return String(value)
-}
-
 export function serialize(cards: VCardInterface | VCardInterface[]): string {
 	return (Array.isArray(cards) ? cards : [cards])
 		.map(serializeCard)
@@ -208,34 +148,11 @@ function serializeCard(card: VCardInterface): string {
 		`VERSION:${card.version}`,
 		...card.properties
 			.filter(property => property.name.toUpperCase() !== 'VERSION')
-			.map(property => foldContentLine(serializeProperty(property, card.version))),
+			.map(property => foldContentLine(encodeProperty(property, card.version))),
 		'END:VCARD',
 	]
 
 	return `${lines.join('\r\n')}\r\n`
-}
-
-/**
- *
- * @param data
- */
-function extractPropertyHeader(data: string, options?: {}): { name: string; group: string | null; remaining: string } {
-
-	const header = data.match(/^(.*?)[\:;]/)?.[1]
-	if (!header) {
-		throw new Error('Invalid card property line: ' + data)
-	}
-	const remaining = data.slice(header.length) // +1 to skip the ':' or ';'
-	let propertyName: string | null = null
-	let propertyGroup: string | null = null
-	if (header.indexOf('.') >= 1) {
-		[propertyGroup, propertyName] = header.split('.', 2)
-	} else {
-		propertyName = header
-		propertyGroup = null
-	}
-
-	return { name: propertyName, group: propertyGroup, remaining }
 }
 
 /**
