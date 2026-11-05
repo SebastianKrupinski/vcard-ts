@@ -15,7 +15,7 @@ export function foldContentLine(line: string, newline = '\r\n'): string {
 
 	while (encoder.encode(remaining).length > (firstLine ? 75 : 74)) {
 		const limit = firstLine ? 75 : 74
-		const [part, rest] = takeBytePrefix(remaining, limit)
+		const [part, rest] = takeUtf8Prefix(remaining, limit)
 		lines.push(firstLine ? part : ` ${part}`)
 		remaining = rest
 		firstLine = false
@@ -37,7 +37,7 @@ export function unfoldContentLines(value: string): string[] {
 	return unfolded
 }
 
-function takeBytePrefix(value: string, limit: number): [string, string] {
+function takeUtf8Prefix(value: string, limit: number): [string, string] {
 	let bytes = 0
 	let end = 0
 	for (const character of value) {

@@ -39,7 +39,7 @@ function splitOnUnquotedCommas(value: string): string[] {
 	return items
 }
 
-function decodeSourceItem(item: string): string {
+function decodeParameterItem(item: string): string {
 	const unquoted = item.length >= 2 && item.startsWith('"') && item.endsWith('"')
 		? item.slice(1, -1)
 		: item
@@ -47,8 +47,8 @@ function decodeSourceItem(item: string): string {
 }
 
 /** Decode one parameter's text as written in a content line, such as "a","b". */
-export function parseParameterItems(source: string): string[] {
-	return splitOnUnquotedCommas(source).map(decodeSourceItem)
+export function decodeParameterItems(source: string): string[] {
+	return splitOnUnquotedCommas(source).map(decodeParameterItem)
 }
 
 export function encodeParameterItem(value: string): string {

@@ -39,10 +39,10 @@ export function encodeProperty(
 	const parameters = encodeParameters(property.params)
 	const header = `${group}${property.name}${parameters ? `;${parameters}` : ''}`
 
-	return `${header}:${serializePropertyValue(property, version)}`
+	return `${header}:${encodeTypedPropertyValue(property, version)}`
 }
 
-function serializePropertyValue(property: VPropertyBaseInterface<unknown>, version: VCardVersion): string {
+function encodeTypedPropertyValue(property: VPropertyBaseInterface<unknown>, version: VCardVersion): string {
 	const value = property.value
 	if (value === null || value === undefined) return ''
 	if (typeof value === 'string') return encodePropertyValue(value)

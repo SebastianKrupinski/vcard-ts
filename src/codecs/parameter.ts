@@ -1,5 +1,5 @@
 import { keepableSource } from './contentLine'
-import { encodeParameterItem, parseParameterItems } from './parameterValue'
+import { encodeParameterItem, decodeParameterItems } from './parameterValue'
 import { createParameter, VParameterCollection, VParameterListObject, VParameterObject } from '../parameters/VParameterObject'
 import type { VParameterCollectionInterface, VParameterListInterface, VParameterObjectInterface } from '../parameters/VParameterInterfaces'
 import { parameterSources } from '../parameters/internal/parameterSources'
@@ -9,7 +9,7 @@ export function decodeParameters(source: string): { params: VParameterCollection
 	const params: VParameterCollectionInterface = new VParameterCollection()
 	let remaining = source
 	while (remaining.startsWith(';')) {
-		const result = extractPropertyParameter(remaining.slice(1))
+		const result = extractParameter(remaining.slice(1))
 		if (!result) throw new Error(`Invalid property parameter: ${source}`)
 		remaining = result.remainder.trimStart()
 		const name = result.name.toUpperCase()
@@ -36,7 +36,7 @@ function parseParameter(name: string, source: string, existing?: VParameterObjec
 	const parameter = existing instanceof VParameterObject ? existing : createParameter(name)
 	if (parameter !== existing) parameterSources.set(parameter, [])
 	const previousSource = parameterSources.get(parameter)
-	const items = parseParameterItems(source)
+	const items = decodeParameterItems(source)
 	if (parameter instanceof VParameterListObject) {
 		parameter.list = [...parameter.list, ...items]
 	} else {
@@ -56,7 +56,7 @@ function parseParameter(name: string, source: string, existing?: VParameterObjec
  * @param data The vCard line starting with the parameter (e.g., 'TYPE=WORK;...').
  * @return An object with the name, value, and the new remainder, or null if no parameter is found.
  */
-function extractPropertyParameter(data: string): { name: string; value: string; remainder: string } | null {
+function extractParameter(data: string): { name: string; value: string; remainder: string } | null {
 	// A parameter name, then one or more comma-separated values, each quoted or unquoted
 	const paramRegex = /^([a-zA-Z0-9-]+)=((?:"[^"]*"|[^;:,]*)(?:,(?:"[^"]*"|[^;:,]*))*)/
 
