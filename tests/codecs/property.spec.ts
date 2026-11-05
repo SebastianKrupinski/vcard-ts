@@ -9,6 +9,13 @@ import { VPropertyTextType } from '../../src/properties/VPropertyTextType'
 import { VPropertyBase } from '../../src/properties/VPropertyBase'
 
 describe('property codec', () => {
+  it.each(['\r', '\n', '\r\n'])('rejects newline %j returned by a custom value serializer', newline => {
+    const value = { serialize: () => `safe${newline}EMAIL:evil@example.com` }
+    const property = new VPropertyBase('X-CUSTOM', value)
+
+    expect(() => encodeProperty(property)).toThrow('Invalid property line: unescaped line break')
+  })
+
   it('decodes a grouped typed property and preserves parameter source', () => {
     const line = 'item1.NOTE;TYPE="a,b";TYPE=work:Line one\\nDoe\\, Jane'
     const property = decodeProperty(line)!

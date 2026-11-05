@@ -39,7 +39,11 @@ export function encodeProperty(
 	const parameters = encodeParameters(property.params)
 	const header = `${group}${property.name}${parameters ? `;${parameters}` : ''}`
 
-	return `${header}:${encodeTypedPropertyValue(property, version)}`
+	const line = `${header}:${encodeTypedPropertyValue(property, version)}`
+	if (/[\r\n]/.test(line)) {
+		throw new Error('Invalid property line: unescaped line break')
+	}
+	return line
 }
 
 function encodeTypedPropertyValue(property: VPropertyBaseInterface<unknown>, version: VCardVersion): string {
