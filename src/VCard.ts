@@ -1,5 +1,4 @@
-import { VParameterCollection, VParameterObject } from './parameters/VParameterObject'
-import { decodeParameterValue, encodeParameters } from './codecs/parameterValue'
+import { decodeParameters, encodeParameters } from './codecs/parameter'
 import { decodePropertyValue, encodePropertyValue } from './codecs/propertyValue'
 import { foldContentLine, normalizeNewlines, unfoldContentLines } from './codecs/contentLine'
 import { VPropertyBase } from './properties/VPropertyBase'
@@ -146,29 +145,12 @@ function countLogicalProperties(properties: VPropertyBaseInterface[]): number {
 function deserializeProperty(data: string, options?: {}): VPropertyBase | null {
 	let name: string | null = null
 	let group: string | null = null
-	const params = new VParameterCollection()
 	let remaining: string
-	// extract the property name and group (if any)
+	// Extract the property name and group, then consume its parameter section.
 	({ name, group, remaining } = extractPropertyHeader(data))
-	// if the next segment start with ';', we have parameters
-	while (remaining.startsWith(';')) {
-		let result: { name: string; value: string; remainder: string } | null
-		// Strip the leading semicolon and extract the next parameter
-		remaining = remaining.substring(1)
-		result = extractPropertyParameter(remaining)
-		if (!result) {
-			throw new Error(`Invalid property parameter: ${data}`)
-		}
-		remaining = result?.remainder.trimStart()
-		const parameterName = result.name.toUpperCase()
-		const rawParameterValue = result.value.startsWith('"') && result.value.endsWith('"')
-			? result.value.slice(1, -1)
-			: result.value
-		const parameterValue = decodeParameterValue(rawParameterValue)
-		params[parameterName] = new VParameterObject(parameterName, parameterValue)
-	}
-	// the remaining part should start with ':', followed by the value
-	const rawValue = remaining.slice(1)
+	const { params, remaining: valueSource } = decodeParameters(remaining)
+	// The codec leaves the colon before the property value.
+	const rawValue = valueSource.slice(1)
 	// instantiate the property object
 	if (!name) {
 		return new VPropertyBase('', decodePropertyValue(rawValue), group, params)
@@ -254,35 +236,6 @@ function extractPropertyHeader(data: string, options?: {}): { name: string; grou
 	}
 
 	return { name: propertyName, group: propertyGroup, remaining }
-}
-
-/**
- * Extracts the first parameter from a vCard property string.
- *
- * @param data The vCard line starting with the parameter (e.g., 'TYPE=WORK;...').
- * @return An object with the name, value, and the new remainder, or null if no parameter is found.
- */
-function extractPropertyParameter(data: string): { name: string; value: string; remainder: string } | null {
-	// Regex to find param name and its value (quoted or unquoted)
-	const paramRegex = /^([a-zA-Z0-9-]+)=("(?:[^"]*)"|[^;:]+)/
-
-	const match = data.match(paramRegex)
-
-	if (match) {
-		// match[0] is the full matched string (e.g., "TYPE=home")
-		// match[1] is the parameter name (Capture Group 1)
-		// match[2] is the parameter value (Capture Group 2)
-		const name = match[1]
-		const value = match[2]
-
-		// The new remainder is the part of the string after the full match
-		const newRemainder = data.substring(match[0].length)
-
-		return { name, value, remainder: newRemainder }
-	}
-
-	// No parameter found at the start of the string
-	return null
 }
 
 /**

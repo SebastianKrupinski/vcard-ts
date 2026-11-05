@@ -4,6 +4,10 @@ export function normalizeNewlines(value: string): string {
 	return value.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
 }
 
+export function keepableSource(value: string): string | null {
+	return /[\r\n]/.test(value) ? null : value
+}
+
 export function foldContentLine(line: string, newline = '\r\n'): string {
 	const lines: string[] = []
 	let remaining = line

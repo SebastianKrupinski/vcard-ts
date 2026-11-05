@@ -39,15 +39,6 @@ function pad(value: number, length = 2): string {
 	return String(value).padStart(length, '0')
 }
 
-/**
- * The original text worth keeping for a value. Text containing a line break
- * can't have come from a content line, and writing it back would let it start
- * a new property.
- */
-export function keepableSource(value: string): string | null {
-	return /[\r\n]/.test(value) ? null : value
-}
-
 /** Parse any supported date form, or return null if the text isn't a valid date. */
 export function parseDate(value: string): DateFields | null {
 	for (const pattern of DATE_PATTERNS) {

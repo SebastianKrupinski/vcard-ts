@@ -1,4 +1,5 @@
-import { formatDate, keepableSource, parseDate } from "../codecs/temporal"
+import { keepableSource } from "../codecs/contentLine"
+import { formatDate, parseDate } from "../codecs/temporal"
 import { VCardVersion } from "../VCardInterfaces"
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
 

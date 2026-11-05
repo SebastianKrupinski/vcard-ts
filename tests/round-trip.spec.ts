@@ -117,6 +117,17 @@ describe('round trip against source text', () => {
     ['4.0', 'KEY;VALUE=text:OPENPGP4FPR:ABC'],
     ['4.0', 'TEL;VALUE=uri:tel:+1-555-555-5555;ext=2'],
     ['4.0', 'TEL;TYPE=work,voice:+1'],
+    ['3.0', 'TEL;TYPE=work;TYPE=voice:+1'],
+    ['3.0', 'TEL;TYPE=CELL;TYPE=VOICE;TYPE=pref:+1'],
+    ['4.0', 'TEL;TYPE="work","voice":+1'],
+    ['4.0', 'TEL;TYPE="work,voice":+1'],
+    ['4.0', 'TEL;TYPE=work,"a:b":+1'],
+    ['4.0', 'NOTE;TYPE="a:b":x'],
+    ['4.0', 'NOTE;X-A="a^nb":x'],
+    ['4.0', 'NOTE;X-A=a,b:x'],
+    ['4.0', 'NOTE;X-A="a","b":x'],
+    ['4.0', 'EMAIL;PID=1.1,2.1:jane@example.com'],
+    ['4.0', 'ADR;LABEL="1 Main St, Town":;;1 Main St;Town;;;'],
     ['4.0', 'EMAIL;PID="1.1,2.1":jane@example.com'],
     ['4.0', 'N;SORT-AS="Doe,Jane":Doe;Jane;;;'],
     ['4.0', 'ORG:Acme\\, Inc;Sales\\;EMEA;West'],
@@ -134,11 +145,6 @@ describe('round trip against source text', () => {
 // bug is fixed, then fails to say the case should move up to the passing list.
 describe('known round-trip bugs', () => {
   it.fails.each<[Version, string]>([
-    // Parameters
-    ['3.0', 'TEL;TYPE=work;TYPE=voice:+1'],
-    ['4.0', 'TEL;TYPE="work","voice":+1'],
-    ['4.0', 'NOTE;TYPE="a:b":x'],
-
     // Inline binary on properties that can also hold a URI or text
     ['3.0', 'KEY;ENCODING=b:AAAA'],
 

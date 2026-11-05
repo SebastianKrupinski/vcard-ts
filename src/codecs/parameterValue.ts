@@ -22,12 +22,36 @@ export function encodeParameterValue(value: string): string {
 		.replace(/"/g, "^'")
 }
 
-export function encodeParameters(parameters: VParameterCollectionInterface): string {
-	return Object.values(parameters).map(parameter => {
-		const name = parameter.name.toUpperCase()
-		const value = encodeParameterValue(parameter.value)
-		const needsQuotes = name !== 'TYPE' && /[,:;]/.test(value)
-		return `${name}=${needsQuotes ? `"${value}"` : value}`
-	}).join(';')
+function splitOnUnquotedCommas(value: string): string[] {
+	const items: string[] = []
+	let current = ''
+	let inQuotes = false
+	for (const character of value) {
+		if (character === '"') inQuotes = !inQuotes
+		if (character === ',' && !inQuotes) {
+			items.push(current)
+			current = ''
+		} else {
+			current += character
+		}
+	}
+	items.push(current)
+	return items
 }
-import type { VParameterCollectionInterface } from '../parameters/VParameterInterfaces'
+
+function decodeSourceItem(item: string): string {
+	const unquoted = item.length >= 2 && item.startsWith('"') && item.endsWith('"')
+		? item.slice(1, -1)
+		: item
+	return decodeParameterValue(unquoted)
+}
+
+/** Decode one parameter's text as written in a content line, such as "a","b". */
+export function parseParameterItems(source: string): string[] {
+	return splitOnUnquotedCommas(source).map(decodeSourceItem)
+}
+
+export function encodeParameterItem(value: string): string {
+	const encoded = encodeParameterValue(value)
+	return /[,:;]/.test(encoded) ? `"${encoded}"` : encoded
+}

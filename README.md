@@ -179,6 +179,28 @@ if (email) {
 }
 ```
 
+`TYPE`, `PID`, and `SORT-AS` are list parameters, which also have a `list`.
+`TYPE=work;TYPE=voice`, `TYPE=work,voice`, and `TYPE="work","voice"` all give the
+same result:
+
+```ts
+const type = card.telephones[0]?.params.TYPE
+
+console.log(type?.list)  // ['work', 'voice']
+console.log(type?.value) // work,voice
+```
+
+Quoted commas stay inside their item: `TYPE="work,voice",cell` has the list
+`['work,voice', 'cell']`. Setting `list` preserves these item boundaries; setting
+`value` splits the supplied string at every comma. Reading `value` joins the
+items with commas, so use `list` when individual items can contain commas.
+
+Other parameters only have `value`, and a comma is part of it, so
+`LABEL="1 Main St, Town"` is a single value.
+
+A parameter you don't change keeps its original form when written. Setting
+`value` or `list` writes it in one form, such as `TYPE=home,cell`.
+
 The property group is separate from its parameters:
 
 ```ts
