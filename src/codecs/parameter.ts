@@ -58,8 +58,8 @@ function parseParameter(name: string, source: string, existing?: VParameterObjec
  * @return An object with the name, value, and the new remainder, or null if no parameter is found.
  */
 function extractParameter(data: string): { name: string; value: string; remainder: string } | null {
-	// A parameter name, then one or more comma-separated values, each quoted or unquoted
-	const paramRegex = /^([a-zA-Z0-9-]+)=((?:"[^"]*"|[^;:,]*)(?:,(?:"[^"]*"|[^;:,]*))*)/
+	// Quotes must enclose a complete item; they cannot appear in an unquoted item.
+	const paramRegex = /^([a-zA-Z0-9-]+)=((?:"[^"]*"|[^";:,]*)(?:,(?:"[^"]*"|[^";:,]*))*)/
 
 	const match = data.match(paramRegex)
 

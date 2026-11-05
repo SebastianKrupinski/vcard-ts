@@ -201,6 +201,9 @@ describe('multiple parameter values', () => {
   it.each([
     'NOTE;LANGUAGE=en',
     'TEL;TYPE="work"voice:+1',
+    'TEL;TYPE="work:+1',
+    'TEL;TYPE=wo"rk:+1',
+    'TEL;TYPE=work,"voice:+1',
     'TEL;TYPE=:+1',
   ])('rejects the malformed line %s', line => {
     expect(() => property(line)).toThrow('Invalid property parameter')

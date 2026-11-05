@@ -56,6 +56,32 @@ describe('parameter codec', () => {
     expect(() => decodeParameters(source)).toThrow('Invalid property parameter')
   })
 
+  it.each([
+    ';TYPE="work:x',
+    ';TYPE=work":x',
+    ';TYPE=wo"rk:x',
+    ';TYPE="work""voice":x',
+    ';TYPE=work,"voice:x',
+    ';TYPE="work",vo"ice:x',
+    ';TYPE=work;LABEL="desk:x',
+    ';LABEL="desk;TYPE=work:x',
+  ])('rejects misplaced or unmatched quotes in %s', source => {
+    expect(() => decodeParameters(source)).toThrow('Invalid property parameter')
+  })
+
+  it.each([
+    [';TYPE="work",voice:x', ['work', 'voice']],
+    [';TYPE=work,"a,b;c:d":x', ['work', 'a,b;c:d']],
+    [';TYPE="a^\'b",c^\'d:x', ['a"b', 'c"d']],
+    [';TYPE="":x', ['']],
+  ])('preserves valid quoted items in %s', (source, items) => {
+    const { params, remaining } = decodeParameters(source as string)
+
+    expect(params.TYPE?.list).toEqual(items)
+    expect(remaining).toBe(':x')
+    expect(`;${encodeParameters(params)}:x`).toBe(source)
+  })
+
   it('round-trips encoded parameters', () => {
     const source = encodeParameters({ TYPE: new VParameterListObject('TYPE', ['a,b', 'c:d']) })
     const { params } = decodeParameters(`;${source}:value`)
