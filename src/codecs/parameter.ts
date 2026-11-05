@@ -42,7 +42,7 @@ function parseParameter(name: string, source: string, existing?: VParameterObjec
 		parameter.list = [...parameter.list, ...items]
 	} else {
 		const text = items.join(',')
-		parameter.value = parameter.value === '' ? text : `${parameter.value},${text}`
+		parameter.value = parameter === existing ? `${parameter.value},${text}` : text
 	}
 	const keepable = keepableSource(source)
 	if (keepable !== null && previousSource !== undefined) {

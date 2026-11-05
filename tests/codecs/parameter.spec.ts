@@ -3,6 +3,25 @@ import { decodeParameters, encodeParameters } from '../../src/codecs/parameter'
 import { VParameterListObject, VParameterObject } from '../../src/parameters/VParameterObject'
 
 describe('parameter codec', () => {
+  it.each([
+    [';X-A="";X-A=b', ',b'],
+    [';X-A=a;X-A=""', 'a,'],
+    [';X-A=a;X-A="";X-A=b', 'a,,b'],
+    [';X-A="";X-A="";X-A=b', ',,b'],
+    [';X-A="";X-A=""', ','],
+  ])('preserves empty scalar occurrences in %s', (source, value) => {
+    const { params } = decodeParameters(`${source}:x`)
+
+    expect(params['X-A'].value).toBe(value)
+    expect(`;${encodeParameters(params)}`).toBe(source)
+
+    // Re-encoding without original source must retain the combined value too.
+    params['X-A'].value = params['X-A'].value
+    expect(params['X-A'].source).toBeNull()
+    const encoded = encodeParameters(params)
+    expect(decodeParameters(`;${encoded}:x`).params['X-A'].value).toBe(value)
+  })
+
   it('round-trips an empty scalar parameter', () => {
     const encoded = encodeParameters({ LABEL: new VParameterObject('LABEL', '') })
 

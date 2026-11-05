@@ -161,6 +161,18 @@ describe('multiple parameter values', () => {
     expect(property('NOTE;X-A=a;X-A=b:x').params['X-A']?.value).toBe('a,b')
   })
 
+  it('retains a leading empty scalar occurrence through a card round trip', () => {
+    const card = deserializeCard('BEGIN:VCARD\r\nVERSION:4.0\r\nFN:Jane Doe\r\nNOTE;X-A="";X-A=b:x\r\nEND:VCARD')
+    const parameter = card.first('NOTE')!.params['X-A']
+    expect(parameter.value).toBe(',b')
+    expect(serialize(card)).toContain('NOTE;X-A="";X-A=b:x\r\n')
+
+    parameter.value = parameter.value
+    const encoded = serialize(card)
+    expect(encoded).toContain('NOTE;X-A=",b":x\r\n')
+    expect(deserializeCard(encoded).first('NOTE')!.params['X-A'].value).toBe(',b')
+  })
+
   it('only offers a list on list parameters', () => {
     const note = property('NOTE;TYPE=work;LANGUAGE=en;X-A=a:x')
 
