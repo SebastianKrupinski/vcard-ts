@@ -22,8 +22,9 @@ export function decodeParameters(source: string): { params: VParameterCollection
 export function encodeParameters(parameters: VParameterCollectionInterface): string {
 	return Object.values(parameters).flatMap(parameter => {
 		const name = parameter.name.toUpperCase()
-		if (parameter.source) {
-			return parameter.source.map(source => `${name}=${source}`)
+		const source = parameter instanceof VParameterObject ? parameterSources.get(parameter) : undefined
+		if (source) {
+			return source.map(value => `${name}=${value}`)
 		}
 
 		const values = (parameter as Partial<VParameterListInterface>).list ?? [parameter.value]

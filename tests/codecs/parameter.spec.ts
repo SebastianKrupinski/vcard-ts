@@ -1,8 +1,43 @@
 import { describe, expect, it } from 'vitest'
 import { decodeParameters, encodeParameters } from '../../src/codecs/parameter'
-import { VParameterListObject } from '../../src/parameters/VParameterObject'
+import { VParameterListObject, VParameterObject } from '../../src/parameters/VParameterObject'
 
 describe('parameter codec', () => {
+  it.each(['a;TYPE=work', 'a:EMAIL:evil@example.com', 'a\r\nEMAIL:evil@example.com'])('ignores custom source %j', source => {
+    const encoded = encodeParameters({ LABEL: { name: 'LABEL', value: 'safe; desk: north', source: [source] } })
+
+    expect(encoded).toBe('LABEL="safe; desk: north"')
+    const { params, remaining } = decodeParameters(`;${encoded}:original`)
+    expect(Object.keys(params)).toEqual(['LABEL'])
+    expect(params.LABEL.value).toBe('safe; desk: north')
+    expect(remaining).toBe(':original')
+  })
+
+  it('encodes custom list items instead of their supplied source', () => {
+    const parameter = { name: 'TYPE', value: 'a,b,c', list: ['a,b', 'c'], source: ['work;PREF=1'] }
+    const encoded = encodeParameters({ TYPE: parameter })
+
+    expect(encoded).toBe('TYPE="a,b",c')
+    expect(decodeParameters(`;${encoded}:x`).params.TYPE?.list).toEqual(['a,b', 'c'])
+  })
+
+  it('ignores source overridden on a parameter subclass', () => {
+    class CustomParameter extends VParameterObject {
+      override get source(): readonly string[] { return ['a;TYPE=work'] }
+    }
+
+    expect(encodeParameters({ LABEL: new CustomParameter('LABEL', 'safe') })).toBe('LABEL=safe')
+  })
+
+  it('retains parser-recorded source until the value is edited', () => {
+    const { params } = decodeParameters(';LABEL="desk; north";TYPE="work";TYPE=voice:x')
+
+    expect(encodeParameters(params)).toBe('LABEL="desk; north";TYPE="work";TYPE=voice')
+    params.LABEL.value = 'edited; desk'
+    params.TYPE!.list = ['home', 'cell']
+    expect(encodeParameters(params)).toBe('LABEL="edited; desk";TYPE=home,cell')
+  })
+
   it('decodes repeated parameters and leaves the property value untouched', () => {
     const { params, remaining } = decodeParameters(';type="a,b",c;LABEL="desk; north: wing";TYPE=home:tel:+1;ext=2')
 
