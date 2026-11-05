@@ -7,6 +7,43 @@ import { VParameterListObject, VParameterObject } from '../src/parameters/VParam
 
 type Version = '3.0' | '4.0'
 
+describe('trailing whitespace in property values', () => {
+  it.each(['3.0', '4.0'] as const)('preserves spaces and tabs through %s round trips', version => {
+    for (const value of ['one  ', 'one\t', '  \t', '', 'one\r\n  two \t']) {
+      const source = card(version, `NOTE:${value}`)
+      const parsed = deserializeCard(source)
+      const expected = value.replace('\r\n ', '')
+
+      expect(parsed.first('NOTE')!.value).toBe(expected)
+      expectToRoundTrip(source)
+      expect(deserializeCard(serialize(parsed)).first('NOTE')!.value).toBe(expected)
+    }
+  })
+
+  it.each(['3.0', '4.0'] as const)('preserves trailing whitespace after editing and folding in %s', version => {
+    const parsed = deserializeCard(card(version, 'NOTE:original'))
+    const value = `${'long text '.repeat(12)} \t`
+    parsed.first('NOTE')!.value = value
+
+    const encoded = serialize(parsed)
+    expect(encoded).toContain('\r\n ')
+    expect(deserializeCard(encoded).first('NOTE')!.value).toBe(value)
+  })
+
+  it('preserves the final collection item and unknown property whitespace', () => {
+    const source = card('4.0', 'CATEGORIES:one,two \t\r\nX-CUSTOM:three  ')
+    const parsed = deserializeCard(source)
+
+    expect(parsed.first('CATEGORIES')!.value).toEqual(['one', 'two \t'])
+    expect(parsed.first('X-CUSTOM')!.value).toBe('three  ')
+    expectToRoundTrip(source)
+  })
+
+  it('still rejects a nested card marker followed by whitespace', () => {
+    expect(() => deserializeCard(card('4.0', 'BEGIN:VCARD  '))).toThrow('nested card marker')
+  })
+})
+
 describe('newlines in edited text', () => {
   it.each(['\r', '\r\n', '\n'])('keeps newline %j inside property and parameter values', newline => {
     const parsed = deserializeCard(card('4.0', 'NOTE;LABEL=original;TYPE=work:original'))
