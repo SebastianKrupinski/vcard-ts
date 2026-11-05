@@ -3,8 +3,31 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 import { deserializeCard, serialize } from '../src/VCard'
+import { VParameterListObject, VParameterObject } from '../src/parameters/VParameterObject'
 
 type Version = '3.0' | '4.0'
+
+describe('newlines in edited text', () => {
+  it.each(['\r', '\r\n', '\n'])('keeps newline %j inside property and parameter values', newline => {
+    const parsed = deserializeCard(card('4.0', 'NOTE;LABEL=original;TYPE=work:original'))
+    const note = parsed.first('NOTE')!
+    const value = `one${newline}EMAIL:evil@example.com`
+    note.value = value
+    note.params.LABEL!.value = value
+    ;(note.params.TYPE as VParameterListObject).list = [value]
+    note.params['X-LABEL'] = new VParameterObject('X-LABEL', value)
+
+    const encoded = serialize(parsed)
+    expect(encoded.replace(/\r\n/g, '')).not.toMatch(/[\r\n]/)
+    const decoded = deserializeCard(encoded)
+    const decodedNote = decoded.first('NOTE')!
+    expect(decoded.all('EMAIL')).toHaveLength(0)
+    expect(decodedNote.value).toBe('one\nEMAIL:evil@example.com')
+    expect(decodedNote.params.LABEL!.value).toBe('one\nEMAIL:evil@example.com')
+    expect(decodedNote.params.TYPE!.list).toEqual(['one\nEMAIL:evil@example.com'])
+    expect(decodedNote.params['X-LABEL'].value).toBe('one\nEMAIL:evil@example.com')
+  })
+})
 
 function fixture(path: string): string {
   return readFileSync(new URL(`./fixtures/${path}`, import.meta.url), 'utf8')

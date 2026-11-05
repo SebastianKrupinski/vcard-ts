@@ -1,3 +1,5 @@
+import { normalizeNewlines } from './contentLine'
+
 export function decodePropertyValue(value: string): string {
 	let decoded = ''
 	for (let index = 0; index < value.length; index++) {
@@ -16,7 +18,7 @@ export function decodePropertyValue(value: string): string {
 }
 
 export function encodePropertyValue(value: string): string {
-	return value
+	return normalizeNewlines(value)
 		.replace(/\\/g, '\\\\')
 		.replace(/\n/g, '\\n')
 		.replace(/,/g, '\\,')
