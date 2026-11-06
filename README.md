@@ -36,6 +36,10 @@ console.log(email?.params.TYPE?.value) // work
 const output = serialize(cards)
 ```
 
+`deserialize` accounts for every line of the input. Blank lines between cards are
+fine, but anything else outside a card, or a card without `END:VCARD`, throws an
+error naming the card and line instead of losing that data.
+
 Use `deserializeCard` when the input must contain exactly one card:
 
 ```ts
@@ -256,6 +260,37 @@ if (email) {
 
 card.drop('X-OBSOLETE-FIELD')
 ```
+
+## Name and address lists
+
+`N` and `ADR` components can each hold several values, such as
+`N:Doe;Jane,Janet;;;`. Most cards only use one, so the field accessors work with
+single values, and `getList` and `setList` handle the rest:
+
+```ts
+const name = card.name?.value
+
+name?.given             // 'Jane': the first item
+name?.getList('given')  // ['Jane', 'Janet']: every item
+
+name!.setList('given', ['Jane', 'Janet'])  // replace the list
+name!.getList('given').push('June')        // change the list in place
+name!.given = 'June'                       // replace the whole list with one item
+```
+
+Constructors accept either form, as in `new VPropertyNameValue('Doe', ['Jane', 'Janet'])`.
+A comma inside a single value stays part of that value and is escaped on output.
+
+The RFC 9554 fields are also available, and work with `getList` and `setList` too:
+
+- `N`: `secondarySurname`, `generation`
+- `ADR`: `room`, `apartment`, `floor`, `streetNumber`, `streetName`, `building`,
+  `block`, `subdistrict`, `district`, `landmark`, `direction`
+
+These fields are only written when set, so other cards keep their usual shape.
+Components beyond the known fields are preserved. RFC 9554 recommends also filling
+the older fields for compatibility, such as a combined `street`, and setting one
+field doesn't update another, so set both when other software needs to read the card.
 
 ## Serialization
 

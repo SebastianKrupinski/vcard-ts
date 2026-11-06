@@ -190,6 +190,8 @@ describe('round trip against source text', () => {
     ['4.0', 'ADR;LABEL="1 Main St, Town":;;1 Main St;Town;;;'],
     ['4.0', 'EMAIL;PID="1.1,2.1":jane@example.com'],
     ['4.0', 'N;SORT-AS="Doe,Jane":Doe;Jane;;;'],
+    ['4.0', 'N:Doe;Jane;Ann,Lee;;'],
+    ['4.0', 'ADR:;;1 Main,Apt 2;Town;;;'],
     ['4.0', 'ORG:Acme\\, Inc;Sales\\;EMEA;West'],
     ['4.0', 'NICKNAME:Jim,Jimmie\\, Jr'],
     ['4.0', 'GENDER:M;Fellow'],
@@ -211,10 +213,6 @@ describe('known round-trip bugs', () => {
     // Geographic URI details
     ['4.0', 'GEO:geo:46.772673,-71.282945,10'],
     ['4.0', 'GEO:geo:46.772673,-71.282945;u=20'],
-
-    // Comma-separated lists inside structured components
-    ['4.0', 'N:Doe;Jane;Ann,Lee;;'],
-    ['4.0', 'ADR:;;1 Main,Apt 2;Town;;;'],
   ])('%s %s', (version, line) => {
     expectToRoundTrip(card(version, line))
   })

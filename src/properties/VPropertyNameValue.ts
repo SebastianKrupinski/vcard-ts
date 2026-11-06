@@ -1,88 +1,87 @@
-import { VParameterValueOptions } from "../parameters/VParameterTypes"
-import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
-import { VPropertyValueBase } from "./VPropertyValueBase"
+import { VPropertyStructuredValue } from "./VPropertyStructuredValue"
 
-export class VPropertyNameValue extends VPropertyValueBase {
+const NAME_FIELDS = [
+	'family',
+	'given',
+	'additional',
+	'prefix',
+	'suffix',
+	'secondarySurname',
+	'generation',
+] as const
 
-	private _family: string
-	private _given: string
-	private _additional: string
-	private _prefix: string
-	private _suffix: string
+export type VPropertyNameField = typeof NAME_FIELDS[number]
+
+/**
+ * An N value. Accessors such as `given` read the first item and replace the whole
+ * list, while `getList('given')` exposes every item.
+ */
+export class VPropertyNameValue extends VPropertyStructuredValue<VPropertyNameField> {
 
 	constructor(
-		family: string = '',
-		given: string = '',
-		additional: string = '',
-		prefix: string = '',
-		suffix: string = '',
+		family: string | string[] = '',
+		given: string | string[] = '',
+		additional: string | string[] = '',
+		prefix: string | string[] = '',
+		suffix: string | string[] = '',
 	) {
-		super()
-		this._family = family
-		this._given = given
-		this._additional = additional
-		this._prefix = prefix
-		this._suffix = suffix
-	}
-
-	deserialize(value: string): VPropertyNameValue {
-		const parts = splitPropertyValue(value, ';').map(decodePropertyValue)
-		this._family = parts[0] || ''
-		this._given = parts[1] || ''
-		this._additional = parts[2] || ''
-		this._prefix = parts[3] || ''
-		this._suffix = parts[4] || ''
-		return this
-	}
-
-	serialize(): string {
-		return [this._family, this._given, this._additional, this._prefix, this._suffix]
-			.map(encodePropertyValue)
-			.join(';')
-	}
-
-	type(): string {
-		return VParameterValueOptions.TEXT
+		super(NAME_FIELDS, 5, [family, given, additional, prefix, suffix])
 	}
 
 	get family(): string {
-		return this._family
+		return this.getList('family')[0] ?? ''
 	}
 
 	set family(family: string) {
-		this._family = family
+		this.setList('family', family)
 	}
 
 	get given(): string {
-		return this._given
+		return this.getList('given')[0] ?? ''
 	}
 
 	set given(given: string) {
-		this._given = given
+		this.setList('given', given)
 	}
 
 	get additional(): string {
-		return this._additional
+		return this.getList('additional')[0] ?? ''
 	}
 
 	set additional(additional: string) {
-		this._additional = additional
+		this.setList('additional', additional)
 	}
 
 	get prefix(): string {
-		return this._prefix
+		return this.getList('prefix')[0] ?? ''
 	}
 
 	set prefix(prefix: string) {
-		this._prefix = prefix
+		this.setList('prefix', prefix)
 	}
 
 	get suffix(): string {
-		return this._suffix
+		return this.getList('suffix')[0] ?? ''
 	}
 
 	set suffix(suffix: string) {
-		this._suffix = suffix
+		this.setList('suffix', suffix)
+	}
+
+	get secondarySurname(): string {
+		return this.getList('secondarySurname')[0] ?? ''
+	}
+
+	set secondarySurname(secondarySurname: string) {
+		this.setList('secondarySurname', secondarySurname)
+	}
+
+	get generation(): string {
+		return this.getList('generation')[0] ?? ''
+	}
+
+	set generation(generation: string) {
+		this.setList('generation', generation)
 	}
 
 }

@@ -19,20 +19,37 @@ export function deserialize(data: string): VCard[] {
 	if (data.length < 30) {
 		throw new Error('Invalid input data: length too short')
 	}
-	// extract all VCARD blocks
-	// we use [\s\S] to match all characters including newlines
-	// the non-greedy *? ensures we match individual cards
-	const dataBlocks: string[] | null = data.match(/^BEGIN:VCARD[\s\S]*?^END:VCARD/gmiu)
-	// sanity check - must have at least one card
-	if (!dataBlocks) {
+
+	// Walk every line so that nothing can be dropped without an error.
+	const lines = normalizeNewlines(data.replace(/^\uFEFF/, '')).split('\n')
+	const cardCollection: VCard[] = []
+	let cardStart: number | null = null
+
+	for (const [index, line] of lines.entries()) {
+		const marker = line.trimEnd().toUpperCase()
+		if (cardStart === null) {
+			if (marker === '') continue
+			if (marker !== 'BEGIN:VCARD') {
+				throw new Error(`Invalid input data: unexpected content outside a card at line ${index + 1}`)
+			}
+			cardStart = index
+		} else if (marker === 'END:VCARD') {
+			try {
+				cardCollection.push(deserializeCard(lines.slice(cardStart, index + 1).join('\r\n')))
+			} catch (error) {
+				const reason = error instanceof Error ? error.message : String(error)
+				throw new Error(`Invalid input data: card ${cardCollection.length + 1} at line ${cardStart + 1}: ${reason}`, { cause: error })
+			}
+			cardStart = null
+		}
+	}
+
+	if (cardStart !== null) {
+		throw new Error(`Invalid input data: card ${cardCollection.length + 1} at line ${cardStart + 1} is missing END:VCARD`)
+	}
+	if (cardCollection.length === 0) {
 		throw new Error('Invalid input data: no cards found')
 	}
-	const cardCollection: VCard[] = []
-	// parse each card
-	dataBlocks.forEach((dataBlock, index) => {
-		const vCard = deserializeCard(dataBlock)
-		cardCollection.push(vCard)
-	})
 	return cardCollection
 }
 
