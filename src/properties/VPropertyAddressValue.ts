@@ -1,7 +1,8 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
 import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
+import { VPropertyValueBase } from "./VPropertyValueBase"
 
-export class VPropertyAddressValue {
+export class VPropertyAddressValue extends VPropertyValueBase {
 
 	private _poBox: string | null
 	private _extended: string | null
@@ -20,6 +21,7 @@ export class VPropertyAddressValue {
 		code?: string,
 		country?: string,
 	) {
+		super()
 		this._poBox = poBox || null
 		this._extended = extended || null
 		this._street = street || null

@@ -7,11 +7,15 @@ import { VPropertyNameValue } from '../../src/properties/VPropertyNameValue'
 import { VPropertyStringCollectionType } from '../../src/properties/VPropertyStringCollectionType'
 import { VPropertyTextType } from '../../src/properties/VPropertyTextType'
 import { VPropertyBase } from '../../src/properties/VPropertyBase'
+import { VPropertyValueBase } from '../../src/properties/VPropertyValueBase'
 
 describe('property codec', () => {
   it.each(['\r', '\n', '\r\n'])('rejects newline %j returned by a custom value serializer', newline => {
-    const value = { serialize: () => `safe${newline}EMAIL:evil@example.com` }
-    const property = new VPropertyBase('X-CUSTOM', value)
+    class UnsafeValue extends VPropertyValueBase {
+      serialize(): string { return `safe${newline}EMAIL:evil@example.com` }
+      type(): string { return 'TEXT' }
+    }
+    const property = new VPropertyBase('X-CUSTOM', new UnsafeValue())
 
     expect(() => encodeProperty(property)).toThrow('Invalid property line: unescaped line break')
   })

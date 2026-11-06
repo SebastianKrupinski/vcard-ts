@@ -10,7 +10,7 @@ export class VPropertyTimeZoneType extends VPropertyBase<string | VPropertyUriVa
 	constructor(
 		name: string,
 		value?: string | VPropertyUriValue | VPropertyUtcOffsetValue,
-		group?: string,
+		group?: string | null,
 		params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {

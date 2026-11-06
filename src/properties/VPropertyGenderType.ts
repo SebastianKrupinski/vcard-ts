@@ -7,7 +7,7 @@ export class VPropertyGenderType extends VPropertyBase<VPropertyGenderValue> {
 	constructor(
 	       name: string,
 	       value?: string | VPropertyGenderValue,
-	       group?: string,
+	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {

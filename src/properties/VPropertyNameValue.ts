@@ -1,7 +1,8 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
 import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
+import { VPropertyValueBase } from "./VPropertyValueBase"
 
-export class VPropertyNameValue {
+export class VPropertyNameValue extends VPropertyValueBase {
 
 	private _family: string
 	private _given: string
@@ -16,6 +17,7 @@ export class VPropertyNameValue {
 		prefix: string = '',
 		suffix: string = '',
 	) {
+		super()
 		this._family = family
 		this._given = given
 		this._additional = additional

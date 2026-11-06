@@ -6,9 +6,9 @@ export class VPropertyStringCollectionType extends VPropertyBase<string[]> {
 
 	constructor(
 		name: string,
-		value: string | string[],
-		group: string | null = null,
-		params: VParameterCollectionInterface = {},
+		value?: string | string[],
+		group?: string | null,
+		params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {
 			value = splitPropertyValue(value, ',').map(decodePropertyValue)

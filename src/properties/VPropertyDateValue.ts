@@ -2,8 +2,9 @@ import { keepableSource } from "../codecs/contentLine"
 import { formatDate, parseDate } from "../codecs/temporal"
 import { VCardVersion } from "../VCardInterfaces"
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
+import { VPropertyValueBase } from "./VPropertyValueBase"
 
-export class VPropertyDateValue {
+export class VPropertyDateValue extends VPropertyValueBase {
 
 	private _year: number | null
 	private _month: number | null
@@ -11,6 +12,7 @@ export class VPropertyDateValue {
 	private _source: string | null = null
 
 	constructor(year?: number | null, month?: number | null, day?: number | null) {
+		super()
 		this._year = year ?? null
 		this._month = month ?? null
 		this._day = day ?? null

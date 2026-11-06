@@ -12,7 +12,7 @@ export class VPropertyTemporalType extends VPropertyBase<VPropertyDateValue|VPro
 	constructor(
 	       name: string,
 	       value?: string | VPropertyDateValue | VPropertyTimeValue | VPropertyDateTimeValue | VPropertyTimestampValue,
-	       group?: string,
+	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {

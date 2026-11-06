@@ -7,7 +7,7 @@ export class VPropertyOrganizationType extends VPropertyBase<VPropertyOrganizati
 	constructor(
 	       name: string,
 	       value?: string | VPropertyOrganizationValue,
-	       group?: string,
+	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {

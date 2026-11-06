@@ -8,7 +8,7 @@ export class VPropertyUriType extends VPropertyBase<VPropertyUriValue|VPropertyU
 	constructor(
 	       name: string,
 	       value?: string | VPropertyUriValue | VPropertyUriDataValue,
-	       group?: string,
+	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {

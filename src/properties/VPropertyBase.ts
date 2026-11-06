@@ -1,8 +1,9 @@
 import { VParameterCollectionInterface } from "../parameters/VParameterInterfaces"
 import { VParameterTags, VParameterValueOptions } from "../parameters/VParameterTypes"
 import { VPropertyBaseInterface } from "./VPropertyInterfaces"
+import { VPropertyValueBase } from "./VPropertyValueBase"
 
-export class VPropertyBase<T = string> implements VPropertyBaseInterface<T | null> {
+export class VPropertyBase<T = string | string[] | VPropertyValueBase> implements VPropertyBaseInterface<T> {
 
 	protected _id: string
 	protected _name: string
@@ -76,8 +77,8 @@ export class VPropertyBase<T = string> implements VPropertyBaseInterface<T | nul
 			value = null
 		}
 		if (value !== null) {
-			if (typeof value === 'object' && 'type' in value) {
-				this._params[VParameterTags.VALUE] = { name: VParameterTags.VALUE, value: (value as any).type() }
+			if (value instanceof VPropertyValueBase) {
+				this._params[VParameterTags.VALUE] = { name: VParameterTags.VALUE, value: value.type() }
 			} else {
 				this._params[VParameterTags.VALUE] = { name: VParameterTags.VALUE, value: VParameterValueOptions.TEXT }
 			}

@@ -1,11 +1,13 @@
 import { VParameterValueOptions } from '../parameters/VParameterTypes'
+import { VPropertyValueBase } from './VPropertyValueBase'
 
-export class VPropertyUtcOffsetValue {
+export class VPropertyUtcOffsetValue extends VPropertyValueBase {
 
 	private _offset: number | null = null
 	private _extended = false
 
 	constructor(offset: number | null = null, extended = false) {
+		super()
 		this.offset = offset
 		this._extended = extended
 	}

@@ -7,7 +7,7 @@ export class VPropertyAddressType extends VPropertyBase<VPropertyAddressValue> {
 	constructor(
 		name: string,
 		value?: string | VPropertyAddressValue,
-		group?: string,
+		group?: string | null,
 		params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {

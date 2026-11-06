@@ -44,6 +44,39 @@ import { deserializeCard } from 'vcard-ts'
 const card = deserializeCard(input)
 ```
 
+## Constructing cards
+
+Add typed properties directly to a new card:
+
+```ts
+import {
+  createCard, serialize, VPropertyNameType, VPropertyNameValue,
+  VPropertyTextType, VPropertyUriType,
+} from 'vcard-ts'
+
+const card = createCard('4.0')
+card.add(new VPropertyTextType('FN', 'Jane Doe'))
+card.add(new VPropertyNameType('N', new VPropertyNameValue('Doe', 'Jane')))
+card.add(new VPropertyUriType('URL', 'https://example.com'))
+
+const output = serialize(card)
+```
+
+Collections and card editing methods accept all property value types. Named
+getters retain their specific types, so `card.name?.value?.given` is typed as
+a string when present.
+
+Generic access through `first`, `all`, `findById`, or `properties` exposes a
+read-only value typed `string | string[] | VPropertyValueBase`. Narrow it with
+`typeof`, `Array.isArray`, or `instanceof VPropertyValueBase` before use. To
+change a value, assign through a named getter or concrete class such as
+`card.name!.value`, or replace the property with `card.revise`.
+
+Built-in structured values extend the abstract `VPropertyValueBase` class, which
+requires `serialize(version?: VCardVersion): string` and `type(): string`. Custom
+values must extend it too, but don't need a property registry entry. Plain objects
+are rejected at compile time, and serializing one throws an error.
+
 ## Typed property getters
 
 Common properties are available directly on the card. Singular properties

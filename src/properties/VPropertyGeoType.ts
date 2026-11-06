@@ -7,7 +7,7 @@ export class VPropertyGeoType extends VPropertyBase<VPropertyUriGeoValue> {
 	constructor(
 		name: string,
 		value?: string | VPropertyUriGeoValue,
-		group?: string,
+		group?: string | null,
 		params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {

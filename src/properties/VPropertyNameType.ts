@@ -7,7 +7,7 @@ export class VPropertyNameType extends VPropertyBase<VPropertyNameValue> {
 	constructor(
 	       name: string,
 	       value?: string | VPropertyNameValue,
-	       group?: string,
+	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {

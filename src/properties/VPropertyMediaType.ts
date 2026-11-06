@@ -10,7 +10,7 @@ export class VPropertyMediaType extends VPropertyBase<VPropertyBinaryValue | VPr
 	constructor(
 		name: string,
 		value?: string | VPropertyBinaryValue | VPropertyUriDataValue | VPropertyUriValue,
-		group?: string,
+		group?: string | null,
 		params?: VParameterCollectionInterface,
 	) {
 		if (typeof value === 'string') {

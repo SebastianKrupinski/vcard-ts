@@ -1,11 +1,14 @@
 import { VPropertyUriValue } from './VPropertyUriValue'
+import { VParameterValueOptions } from '../parameters/VParameterTypes'
+import { VPropertyValueBase } from './VPropertyValueBase'
 
-export class VPropertyClientPidMapValue {
+export class VPropertyClientPidMapValue extends VPropertyValueBase {
 
 	private _sourceId: number | null
 	private _uri: VPropertyUriValue | null
 
 	constructor(sourceId: number | null = null, uri: VPropertyUriValue | null = null) {
+		super()
 		this._sourceId = null
 		this.sourceId = sourceId
 		this._uri = uri
@@ -28,6 +31,10 @@ export class VPropertyClientPidMapValue {
 	serialize(): string {
 		if (this._sourceId === null || this._uri === null) return ''
 		return `${this._sourceId};${this._uri.serialize()}`
+	}
+
+	type(): string {
+		return VParameterValueOptions.TEXT
 	}
 
 	get sourceId(): number | null {

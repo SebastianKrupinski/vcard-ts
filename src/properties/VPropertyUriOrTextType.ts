@@ -9,7 +9,7 @@ export class VPropertyUriOrTextType extends VPropertyBase<VPropertyUriValue | st
 	constructor(
 		name: string,
 		value?: string | VPropertyUriValue,
-		group?: string,
+		group?: string | null,
 		params?: VParameterCollectionInterface,
 		defaultType: string = VParameterValueOptions.URI,
 	) {

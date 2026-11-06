@@ -4,6 +4,7 @@ import { VPropertyBase } from '../properties/VPropertyBase'
 import { VPropertyTimeValue } from '../properties/VPropertyTimeValue'
 import { VParameterValueOptions } from '../parameters/VParameterTypes'
 import type { VPropertyBaseInterface } from '../properties/VPropertyInterfaces'
+import { VPropertyValueBase } from '../properties/VPropertyValueBase'
 import { VCardVersion } from '../VCardInterfaces'
 import { propertyTypes } from '../properties/VPropertyTypes'
 
@@ -32,7 +33,7 @@ export function decodeProperty(data: string): VPropertyBase | null {
 }
 
 export function encodeProperty(
-	property: VPropertyBaseInterface<unknown>,
+	property: VPropertyBaseInterface,
 	version: VCardVersion = VCardVersion.V4_0,
 ): string {
 	const group = property.hasGroup ? `${property.group}.` : ''
@@ -46,12 +47,12 @@ export function encodeProperty(
 	return line
 }
 
-function encodeTypedPropertyValue(property: VPropertyBaseInterface<unknown>, version: VCardVersion): string {
+function encodeTypedPropertyValue(property: VPropertyBaseInterface, version: VCardVersion): string {
 	const value = property.value
 	if (value === null || value === undefined) return ''
 	if (typeof value === 'string') return encodePropertyValue(value)
 	if (Array.isArray(value)) {
-		return value.map(item => encodePropertyValue(String(item))).join(',')
+		return value.map(item => encodePropertyValue(item)).join(',')
 	}
 	if (value instanceof VPropertyTimeValue) {
 		// Without VALUE=time, a time needs its T to be told apart from a date.
@@ -59,11 +60,10 @@ function encodeTypedPropertyValue(property: VPropertyBaseInterface<unknown>, ver
 		const declaredAsTime = property.params.VALUE?.value.toUpperCase() === VParameterValueOptions.TIME
 		return declaredAsTime || text === '' || text.startsWith('T') ? text : `T${text}`
 	}
-	if (typeof value === 'object' && 'serialize' in value
-		&& typeof value.serialize === 'function') {
+	if (value instanceof VPropertyValueBase) {
 		return value.serialize(version)
 	}
-	return String(value)
+	throw new Error(`Invalid property value: ${property.name} must be text, a list, or a VPropertyValueBase`)
 }
 
 /**

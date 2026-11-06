@@ -23,7 +23,7 @@ describe('trailing whitespace in property values', () => {
   it.each(['3.0', '4.0'] as const)('preserves trailing whitespace after editing and folding in %s', version => {
     const parsed = deserializeCard(card(version, 'NOTE:original'))
     const value = `${'long text '.repeat(12)} \t`
-    parsed.first('NOTE')!.value = value
+    parsed.notes[0].value = value
 
     const encoded = serialize(parsed)
     expect(encoded).toContain('\r\n ')
@@ -47,7 +47,7 @@ describe('trailing whitespace in property values', () => {
 describe('newlines in edited text', () => {
   it.each(['\r', '\r\n', '\n'])('keeps newline %j inside property and parameter values', newline => {
     const parsed = deserializeCard(card('4.0', 'NOTE;LABEL=original;TYPE=work:original'))
-    const note = parsed.first('NOTE')!
+    const note = parsed.notes[0]
     const value = `one${newline}EMAIL:evil@example.com`
     note.value = value
     note.params.LABEL!.value = value
