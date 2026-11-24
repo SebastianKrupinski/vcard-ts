@@ -104,6 +104,10 @@ Strings for structured properties use the vCard format, as in
 item, so pass an array for several. To read text that's already encoded for a vCard
 line, use `new VPropertyTextType('NOTE').deserialize('Doe\\, Jane')`.
 
+Encoded text accepts `\\`, `\,`, `\;`, and `\n` (or `\N`). Unsupported escapes
+such as `\:` and trailing unpaired backslashes are rejected. Literal text passed
+to a text constructor or assigned to `.value` is escaped automatically.
+
 `VALUE` is only written when a property's value isn't the type readers assume, as
 with a URI in `TEL` or text in `BDAY`. An existing `VALUE` that still matches is kept.
 For a property that can hold several forms, set `property.type` first to choose how

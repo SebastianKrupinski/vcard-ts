@@ -121,16 +121,6 @@ function expectToRoundTrip(source: string): void {
   expect(contentLines(serialize(deserializeCard(source)))).toEqual(contentLines(source))
 }
 
-function expectToRoundTripOrReject(source: string): void {
-  let output: string
-  try {
-    output = serialize(deserializeCard(source))
-  } catch {
-    return
-  }
-  expect(contentLines(output)).toEqual(contentLines(source))
-}
-
 describe('round trip against source text', () => {
   it.each<Version>(['3.0', '4.0'])('rejects multiple group separators in %s', version => {
     expect(() => deserializeCard(card(version, 'a.b.NOTE:x')))
@@ -212,12 +202,28 @@ describe('round trip against source text', () => {
   })
 })
 
-// Each case below is a confirmed bug. `it.fails` keeps the suite green until the
-// bug is fixed, then fails to say the case should move up to the passing list.
-describe('known round-trip bugs', () => {
-  it.fails.each<[Version, string]>([
-    ['4.0', 'NOTE:a\\:b'],
-  ])('%s %s should be kept or rejected, not altered', (version, line) => {
-    expectToRoundTripOrReject(card(version, line))
+describe('unsupported text escapes', () => {
+  it.each<Version>(['3.0', '4.0'])('rejects a backslash-colon escape in %s', version => {
+    expect(() => deserializeCard(card(version, String.raw`NOTE:a\:b`)))
+      .toThrow('Invalid text escape')
+  })
+
+  it.each([
+    String.raw`X-CUSTOM:a\:b`,
+    String.raw`N:Doe;Jane\q;;;`,
+    String.raw`ADR:;;1 Main\q;Town;;;`,
+    String.raw`ORG:Acme;Team\q`,
+    String.raw`CATEGORIES:one,two\q`,
+    String.raw`GENDER:;person\q`,
+    String.raw`UID;VALUE=text:a\:b`,
+  ])('rejects unsupported escapes in %s', line => {
+    expect(() => deserializeCard(card('4.0', line))).toThrow('Invalid text escape')
+  })
+
+  it('keeps literal backslashes supplied through application text', () => {
+    const parsed = deserializeCard(card('4.0', 'NOTE:original'))
+    const literal = String.raw`a\:b\q` + '\\'
+    parsed.notes[0].value = literal
+    expect(deserializeCard(serialize(parsed)).notes[0].value).toBe(literal)
   })
 })
