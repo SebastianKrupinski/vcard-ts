@@ -73,6 +73,12 @@ Collections and card editing methods accept all property value types. Named
 getters retain their specific types, so `card.name?.value?.given` is typed as
 a string when present.
 
+`card.properties` returns a frozen, read-only snapshot of the collection. Use
+`add`, `revise`, `reviseById`, `drop`, or `dropById` to change its membership.
+Property objects and their values remain editable through their concrete types.
+The constructor copies its input array, and previously read snapshots do not
+change when properties are subsequently added or removed.
+
 Generic access through `first`, `all`, `findById`, or `properties` exposes a
 read-only value typed `string | string[] | VPropertyValueBase`. Narrow it with
 `typeof`, `Array.isArray`, or `instanceof VPropertyValueBase` before use. To

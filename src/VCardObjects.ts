@@ -2,7 +2,7 @@ import { VPropertyAddressType } from './properties/VPropertyAddressType'
 import { VPropertyGenderType } from './properties/VPropertyGenderType'
 import { VPropertyGeoType } from './properties/VPropertyGeoType'
 import { VPropertyMediaType } from './properties/VPropertyMediaType'
-import { VPropertyBaseInterface, VPropertyCollectionInterface } from './properties/VPropertyInterfaces'
+import { VPropertyBaseInterface } from './properties/VPropertyInterfaces'
 import { VPropertyNameType } from './properties/VPropertyNameType'
 import { VPropertyOrganizationType } from './properties/VPropertyOrganizationType'
 import { VPropertyStringCollectionType } from './properties/VPropertyStringCollectionType'
@@ -20,70 +20,75 @@ import {
 export class VCard implements VCardInterface {
 
 	private _version: VCardVersion = VCardVersion.V3_0
-	properties: VPropertyCollectionInterface
+	private readonly _properties: VPropertyBaseInterface[]
 
-	constructor(version: VCardVersion = VCardVersion.V3_0, properties: VPropertyCollectionInterface = []) {
+	constructor(version: VCardVersion = VCardVersion.V3_0, properties: readonly VPropertyBaseInterface[] = []) {
 		this._version = version
-		this.properties = properties
+		this._properties = [...properties]
+	}
+
+	/** Read-only snapshot of the collection; property objects remain editable. */
+	get properties(): readonly VPropertyBaseInterface[] {
+		return Object.freeze([...this._properties])
 	}
 
 	add(value: VPropertyBaseInterface): void {
-		this.properties.push(value)
+		this._properties.push(value)
 	}
 
 	/** Return the first property with this name, or null when it is absent. */
 	first(name: string): VPropertyBaseInterface | null {
-		return this.properties.find(property => property.name.toUpperCase() === name.toUpperCase()) ?? null
+		return this._properties.find(property => property.name.toUpperCase() === name.toUpperCase()) ?? null
 	}
 
 	/** Return every property with this name in source order. */
 	all(name: string): VPropertyBaseInterface[] {
-		return this.properties.filter(property => property.name.toUpperCase() === name.toUpperCase())
+		return this._properties.filter(property => property.name.toUpperCase() === name.toUpperCase())
 	}
 
 	findById(id: string): VPropertyBaseInterface | null {
-		const found = this.properties.find((p) => p.id === id)
+		const found = this._properties.find((p) => p.id === id)
 		return found || null
 	}
 
 	revise(current: VPropertyBaseInterface, revision: VPropertyBaseInterface): void {
-		const index = this.properties.findIndex((p) => p.id === current.id)
+		const index = this._properties.findIndex((p) => p.id === current.id)
 		if (index !== -1) {
-			this.properties[index] = revision
+			this._properties[index] = revision
 		}
 	}
 
 	reviseById(id: string, revision: VPropertyBaseInterface): void {
-		const index = this.properties.findIndex((p) => p.id === id)
+		const index = this._properties.findIndex((p) => p.id === id)
 		if (index !== -1) {
-			this.properties[index] = revision
+			this._properties[index] = revision
 		}
 	}
 
 	drop(value: string|VPropertyBaseInterface): void {
 		if (typeof value === 'string') {
-			let index = this.properties.findIndex((p) => p.name.toUpperCase() === value.toUpperCase())
+			let index = this._properties.findIndex((p) => p.name.toUpperCase() === value.toUpperCase())
 			while (index !== -1) {
-				this.properties.splice(index, 1)
-				index = this.properties.findIndex((p) => p.name.toUpperCase() === value.toUpperCase())
+				this._properties.splice(index, 1)
+				index = this._properties.findIndex((p) => p.name.toUpperCase() === value.toUpperCase())
 			}
 		} else {
-			const index = this.properties.findIndex((p) => p.id === value.id)
+			const index = this._properties.findIndex((p) => p.id === value.id)
 			if (index !== -1) {
-				this.properties.splice(index, 1)
+				this._properties.splice(index, 1)
 			}
 		}
 	}
 
 	dropById(id: string): void {
-		const index = this.properties.findIndex((p) => p.id === id)
+		const index = this._properties.findIndex((p) => p.id === id)
 		if (index !== -1) {
-			this.properties.splice(index, 1)
+			this._properties.splice(index, 1)
 		}
 	}
 
 	has(name: string): boolean {
-		return this.properties.some((p) => p.name.toUpperCase() === name.toUpperCase())
+		return this._properties.some((p) => p.name.toUpperCase() === name.toUpperCase())
 	}
 
 	get version(): VCardVersion {
@@ -93,7 +98,7 @@ export class VCard implements VCardInterface {
 	set version(version: VCardVersion) {
 		if (version !== this._version) {
 			// The original text was written for the old version, so it can't be reused.
-			for (const property of this.properties) {
+			for (const property of this._properties) {
 				const value = property.value as { clearSource?: () => void } | null
 				value?.clearSource?.()
 			}

@@ -122,7 +122,7 @@ describe('typed construction', () => {
     expect(card.name).toBe(revised)
     card.reviseById(revised.id, original)
     expect(card.name).toBe(original)
-    card.properties.push(new VPropertyUriType('URL', 'https://example.com'))
+    card.add(new VPropertyUriType('URL', 'https://example.com'))
     expect(card.urls).toHaveLength(1)
   })
 
