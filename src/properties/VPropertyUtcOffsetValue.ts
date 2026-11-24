@@ -5,6 +5,7 @@ export class VPropertyUtcOffsetValue extends VPropertyValueBase {
 
 	private _offset: number | null = null
 	private _extended = false
+	private _source: string | null = null
 
 	constructor(offset: number | null = null, extended = false) {
 		super()
@@ -13,7 +14,8 @@ export class VPropertyUtcOffsetValue extends VPropertyValueBase {
 	}
 
 	deserialize(value: string): VPropertyUtcOffsetValue {
-		const match = value.match(/^([+-])(\d{2})(:?)(\d{2})$/)
+		this._source = null
+		const match = value.match(/^([+-])(\d{2})(?:(:?)(\d{2}))?$/)
 		if (!match) {
 			this._offset = null
 			this._extended = false
@@ -21,7 +23,7 @@ export class VPropertyUtcOffsetValue extends VPropertyValueBase {
 		}
 
 		const hours = Number(match[2])
-		const minutes = Number(match[4])
+		const minutes = Number(match[4] ?? 0)
 		if (hours > 23 || minutes > 59) {
 			this._offset = null
 			this._extended = false
@@ -31,10 +33,12 @@ export class VPropertyUtcOffsetValue extends VPropertyValueBase {
 		const sign = match[1] === '+' ? 1 : -1
 		this._offset = sign * (hours * 60 + minutes)
 		this._extended = match[3] === ':'
+		this._source = value
 		return this
 	}
 
 	serialize(): string {
+		if (this._source !== null) return this._source
 		if (this._offset === null) return ''
 
 		const sign = this._offset >= 0 ? '+' : '-'
@@ -53,6 +57,7 @@ export class VPropertyUtcOffsetValue extends VPropertyValueBase {
 	}
 
 	set offset(value: number | null) {
+		this._source = null
 		this._offset = value !== null && Number.isInteger(value) && Math.abs(value) < 24 * 60
 			? value
 			: null
@@ -63,6 +68,7 @@ export class VPropertyUtcOffsetValue extends VPropertyValueBase {
 	}
 
 	set extended(value: boolean) {
+		this._source = null
 		this._extended = value
 	}
 
