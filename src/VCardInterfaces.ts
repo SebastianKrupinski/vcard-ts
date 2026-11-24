@@ -1,4 +1,4 @@
-import { VPropertyCollectionInterface } from "./properties/VPropertyInterfaces"
+import { VPropertyBaseInterface } from "./properties/VPropertyInterfaces"
 
 export enum VCardVersion {
 	V3_0 = '3.0',
@@ -7,5 +7,5 @@ export enum VCardVersion {
 
 export interface VCardInterface {
   version: VCardVersion
-  properties: VPropertyCollectionInterface
+  readonly properties: readonly VPropertyBaseInterface[]
 }

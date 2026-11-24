@@ -4,15 +4,18 @@ export function decodePropertyValue(value: string): string {
 	let decoded = ''
 	for (let index = 0; index < value.length; index++) {
 		const character = value[index]
-		if (character !== '\\' || index === value.length - 1) {
+		if (character !== '\\') {
 			decoded += character
 			continue
+		}
+		if (index === value.length - 1) {
+			throw new Error('Invalid text escape: trailing backslash')
 		}
 
 		const escaped = value[++index]
 		if (escaped.toLowerCase() === 'n') decoded += '\n'
 		else if (escaped === '\\' || escaped === ',' || escaped === ';') decoded += escaped
-		else decoded += `\\${escaped}`
+		else throw new Error(`Invalid text escape: \\${escaped}`)
 	}
 	return decoded
 }

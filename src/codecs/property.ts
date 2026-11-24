@@ -1,9 +1,10 @@
 import { decodeParameters, encodeParameters } from './parameter'
-import { decodePropertyValue, encodePropertyValue } from './propertyValue'
+import { encodePropertyValue } from './propertyValue'
 import { VPropertyBase } from '../properties/VPropertyBase'
 import { VPropertyTimeValue } from '../properties/VPropertyTimeValue'
 import { VParameterValueOptions } from '../parameters/VParameterTypes'
 import type { VPropertyBaseInterface } from '../properties/VPropertyInterfaces'
+import { VPropertyValueBase } from '../properties/VPropertyValueBase'
 import { VCardVersion } from '../VCardInterfaces'
 import { propertyTypes } from '../properties/VPropertyTypes'
 
@@ -18,21 +19,12 @@ export function decodeProperty(data: string): VPropertyBase | null {
 	// The codec leaves the colon before the property value.
 	const rawValue = valueSource.slice(1)
 	// instantiate the property object
-	if (!name) {
-		return new VPropertyBase('', decodePropertyValue(rawValue), group, params)
-	}
-	const PropertyType = propertyTypes[name.toUpperCase()]
-	if (PropertyType === VPropertyBase) {
-		return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
-	}
-	if (PropertyType) {
-		return new PropertyType(name, rawValue, group, params)
-	}
-	return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
+	const PropertyType = propertyTypes[(name ?? '').toUpperCase()] ?? VPropertyBase
+	return new PropertyType(name ?? '', undefined, group, params).deserialize(rawValue)
 }
 
 export function encodeProperty(
-	property: VPropertyBaseInterface<unknown>,
+	property: VPropertyBaseInterface,
 	version: VCardVersion = VCardVersion.V4_0,
 ): string {
 	const group = property.hasGroup ? `${property.group}.` : ''
@@ -46,12 +38,15 @@ export function encodeProperty(
 	return line
 }
 
-function encodeTypedPropertyValue(property: VPropertyBaseInterface<unknown>, version: VCardVersion): string {
+function encodeTypedPropertyValue(property: VPropertyBaseInterface, version: VCardVersion): string {
 	const value = property.value
 	if (value === null || value === undefined) return ''
-	if (typeof value === 'string') return encodePropertyValue(value)
+	if (typeof value === 'string') {
+		const isUri = property.params.VALUE?.value.toUpperCase() === VParameterValueOptions.URI
+		return isUri ? value : encodePropertyValue(value)
+	}
 	if (Array.isArray(value)) {
-		return value.map(item => encodePropertyValue(String(item))).join(',')
+		return value.map(item => encodePropertyValue(item)).join(',')
 	}
 	if (value instanceof VPropertyTimeValue) {
 		// Without VALUE=time, a time needs its T to be told apart from a date.
@@ -59,32 +54,21 @@ function encodeTypedPropertyValue(property: VPropertyBaseInterface<unknown>, ver
 		const declaredAsTime = property.params.VALUE?.value.toUpperCase() === VParameterValueOptions.TIME
 		return declaredAsTime || text === '' || text.startsWith('T') ? text : `T${text}`
 	}
-	if (typeof value === 'object' && 'serialize' in value
-		&& typeof value.serialize === 'function') {
+	if (value instanceof VPropertyValueBase) {
 		return value.serialize(version)
 	}
-	return String(value)
+	throw new Error(`Invalid property value: ${property.name} must be text, a list, or a VPropertyValueBase`)
 }
 
-/**
- *
- * @param data
- */
+/** Read an optional group and property name without discarding header text. */
 function extractPropertyHeader(data: string): { name: string; group: string | null; remaining: string } {
-
-	const header = data.match(/^(.*?)[\:;]/)?.[1]
+	const header = data.match(/^(?:([a-z0-9-]+)\.)?([a-z0-9-]+)(?=[:;])/i)
 	if (!header) {
 		throw new Error('Invalid card property line: ' + data)
 	}
-	const remaining = data.slice(header.length) // +1 to skip the ':' or ';'
-	let propertyName: string | null = null
-	let propertyGroup: string | null = null
-	if (header.indexOf('.') >= 1) {
-		[propertyGroup, propertyName] = header.split('.', 2)
-	} else {
-		propertyName = header
-		propertyGroup = null
+	return {
+		name: header[2],
+		group: header[1] ?? null,
+		remaining: data.slice(header[0].length),
 	}
-
-	return { name: propertyName, group: propertyGroup, remaining }
 }

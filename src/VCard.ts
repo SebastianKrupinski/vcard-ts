@@ -19,20 +19,37 @@ export function deserialize(data: string): VCard[] {
 	if (data.length < 30) {
 		throw new Error('Invalid input data: length too short')
 	}
-	// extract all VCARD blocks
-	// we use [\s\S] to match all characters including newlines
-	// the non-greedy *? ensures we match individual cards
-	const dataBlocks: string[] | null = data.match(/^BEGIN:VCARD[\s\S]*?^END:VCARD/gmiu)
-	// sanity check - must have at least one card
-	if (!dataBlocks) {
+
+	// Walk every line so that nothing can be dropped without an error.
+	const lines = normalizeNewlines(data.replace(/^\uFEFF/, '')).split('\n')
+	const cardCollection: VCard[] = []
+	let cardStart: number | null = null
+
+	for (const [index, line] of lines.entries()) {
+		const marker = line.trimEnd().toUpperCase()
+		if (cardStart === null) {
+			if (marker === '') continue
+			if (marker !== 'BEGIN:VCARD') {
+				throw new Error(`Invalid input data: unexpected content outside a card at line ${index + 1}`)
+			}
+			cardStart = index
+		} else if (marker === 'END:VCARD') {
+			try {
+				cardCollection.push(deserializeCard(lines.slice(cardStart, index + 1).join('\r\n')))
+			} catch (error) {
+				const reason = error instanceof Error ? error.message : String(error)
+				throw new Error(`Invalid input data: card ${cardCollection.length + 1} at line ${cardStart + 1}: ${reason}`, { cause: error })
+			}
+			cardStart = null
+		}
+	}
+
+	if (cardStart !== null) {
+		throw new Error(`Invalid input data: card ${cardCollection.length + 1} at line ${cardStart + 1} is missing END:VCARD`)
+	}
+	if (cardCollection.length === 0) {
 		throw new Error('Invalid input data: no cards found')
 	}
-	const cardCollection: VCard[] = []
-	// parse each card
-	dataBlocks.forEach((dataBlock, index) => {
-		const vCard = deserializeCard(dataBlock)
-		cardCollection.push(vCard)
-	})
 	return cardCollection
 }
 
@@ -54,6 +71,7 @@ export function deserializeCard(data: string): VCard {
 
 	const lines = unfoldContentLines(data)
 	const properties = new VPropertyCollection()
+	let versionLineIndex = -1
 
 	for (const [index, line] of lines.entries()) {
 		if (line.length === 0) continue
@@ -64,6 +82,11 @@ export function deserializeCard(data: string): VCard {
 
 		const prop = decodeProperty(line)
 		if (!prop) continue
+		const name = prop.name.toUpperCase()
+		if (name === 'BEGIN' || name === 'END') {
+			throw new Error(`Invalid vCard data: unexpected card boundary property: ${name}`)
+		}
+		if (name === 'VERSION') versionLineIndex = index
 
 		properties.push(prop)
 	}
@@ -77,6 +100,9 @@ export function deserializeCard(data: string): VCard {
 	if (typeof versionValue !== 'string'
 		|| !Object.values(VCardVersion).includes(versionValue as VCardVersion)) {
 		throw new Error(`Invalid vCard data: unsupported VERSION value ${String(versionValue)}`)
+	}
+	if (versionValue === VCardVersion.V4_0 && versionLineIndex !== 1) {
+		throw new Error('Invalid vCard data: VERSION must immediately follow BEGIN:VCARD for version 4.0')
 	}
 
 	validatePropertyCardinalities(
@@ -160,13 +186,10 @@ function serializeCard(card: VCardInterface): string {
  * @param version
  */
 export function createCard(version: '3.0' | '4.0' = '4.0'): VCard {
-	let v: VCardVersion
-	if (typeof version === 'string') {
-		v = VCardVersion[('V' + version.replace('.', '_')) as keyof typeof VCardVersion] ?? VCardVersion.V3_0
-	} else {
-		v = version
+	if (version !== '3.0' && version !== '4.0') {
+		throw new Error(`Unsupported vCard version: ${String(version)}`)
 	}
-	return new VCard(v, new VPropertyCollection())
+	return new VCard(version === '3.0' ? VCardVersion.V3_0 : VCardVersion.V4_0, new VPropertyCollection())
 }
 
 export default {

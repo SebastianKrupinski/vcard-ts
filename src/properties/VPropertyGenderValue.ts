@@ -1,12 +1,14 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
 import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
+import { VPropertyValueBase } from "./VPropertyValueBase"
 
-export class VPropertyGenderValue {
+export class VPropertyGenderValue extends VPropertyValueBase {
 
 	private _sex: string
 	private _identity?: string
 
 	constructor(sex: string = '', identity?: string) {
+		super()
 	       this._sex = sex
 	       this._identity = identity
 	}

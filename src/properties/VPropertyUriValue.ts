@@ -1,11 +1,13 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
+import { VPropertyValueBase } from "./VPropertyValueBase"
 
-export class VPropertyUriValue {
+export class VPropertyUriValue extends VPropertyValueBase {
 
 	private _scheme: string
 	private _reference: string
 
 	constructor(scheme: string = '', reference: string = '') {
+		super()
 		this._scheme = scheme
 		this._reference = reference
 	}
@@ -23,7 +25,7 @@ export class VPropertyUriValue {
 	}
 
 	serialize(): string {
-		return `${this._scheme}:${this._reference}`
+		return this._scheme ? `${this._scheme}:${this._reference}` : this._reference
 	}
 
 	type(): string {

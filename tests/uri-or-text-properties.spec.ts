@@ -21,7 +21,7 @@ describe('URI-or-text properties', () => {
   it('respects an explicit text value type', () => {
     const property = new VPropertyUriOrTextType(
       'UID',
-      'Local\\, identifier',
+      'Local, identifier',
       undefined,
       new VParameterCollection([{ name: 'VALUE', value: 'text' }]),
     )
@@ -32,7 +32,7 @@ describe('URI-or-text properties', () => {
   })
 
   it('supports properties whose default value type is text', () => {
-    const text = new VPropertyTextOrUriType('BIRTHPLACE', 'Toronto\\, Ontario')
+    const text = new VPropertyTextOrUriType('BIRTHPLACE', 'Toronto, Ontario')
     const uri = new VPropertyTextOrUriType(
       'BIRTHPLACE',
       'geo:43.6532,-79.3832',

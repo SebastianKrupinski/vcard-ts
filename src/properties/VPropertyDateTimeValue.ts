@@ -2,13 +2,15 @@ import { VCardVersion } from '../VCardInterfaces'
 import { VParameterValueOptions } from '../parameters/VParameterTypes'
 import { VPropertyDateValue } from './VPropertyDateValue'
 import { VPropertyTimeValue } from './VPropertyTimeValue'
+import { VPropertyValueBase } from './VPropertyValueBase'
 
-export class VPropertyDateTimeValue {
+export class VPropertyDateTimeValue extends VPropertyValueBase {
 
 	private _date: VPropertyDateValue
 	private _time: VPropertyTimeValue
 
 	constructor(date: VPropertyDateValue = new VPropertyDateValue(), time: VPropertyTimeValue = new VPropertyTimeValue()) {
+		super()
 		this._date = date
 		this._time = time
 	}

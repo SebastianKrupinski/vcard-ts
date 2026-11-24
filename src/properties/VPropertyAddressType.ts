@@ -7,13 +7,15 @@ export class VPropertyAddressType extends VPropertyBase<VPropertyAddressValue> {
 	constructor(
 		name: string,
 		value?: string | VPropertyAddressValue,
-		group?: string,
+		group?: string | null,
 		params?: VParameterCollectionInterface,
 	) {
-		if (typeof value === 'string') {
-			value = new VPropertyAddressValue().deserialize(value)
-		}
 		super(name, value, group, params)
+	}
+
+	deserialize(value: string): this {
+		this._value = new VPropertyAddressValue().deserialize(value)
+		return this
 	}
 
 }

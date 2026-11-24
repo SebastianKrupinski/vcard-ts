@@ -1,10 +1,12 @@
 import { VParameterValueOptions } from '../parameters/VParameterTypes'
+import { VPropertyValueBase } from './VPropertyValueBase'
 
-export class VPropertyBinaryValue {
+export class VPropertyBinaryValue extends VPropertyValueBase {
 
 	private _data: string
 
 	constructor(data = '') {
+		super()
 		this._data = data
 	}
 

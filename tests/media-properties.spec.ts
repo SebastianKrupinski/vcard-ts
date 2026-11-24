@@ -3,9 +3,32 @@ import { describe, expect, it } from 'vitest'
 import { deserializeCard, serialize } from '../src/VCard'
 import { VPropertyBinaryValue } from '../src/properties/VPropertyBinaryValue'
 import { VPropertyMediaType } from '../src/properties/VPropertyMediaType'
+import { VPropertyUriDataValue } from '../src/properties/VPropertyUriDataValue'
 import { VPropertyUriValue } from '../src/properties/VPropertyUriValue'
 
 describe('media properties', () => {
+  it.each<[string, string | null, string | null, string]>([
+    ['data:image/svg+xml,%3Csvg%3E', 'image/svg+xml', null, '%3Csvg%3E'],
+    ['data:;base64,AAAA', null, 'base64', 'AAAA'],
+    ['data:,hello%20world', null, null, 'hello%20world'],
+    ['data:,', null, null, ''],
+    ['data:text/plain;charset=utf-8,hello', 'text/plain', 'charset=utf-8', 'hello'],
+  ])('preserves optional metadata in %s', (uri, format, encoding, data) => {
+    const source = [
+      'BEGIN:VCARD',
+      'VERSION:4.0',
+      'FN:Jane Doe',
+      `PHOTO:${uri}`,
+      'END:VCARD',
+      '',
+    ].join('\r\n')
+    const card = deserializeCard(source)
+
+    expect(card.photos[0].value).toMatchObject({ format, encoding, data })
+    expect(serialize(card)).toBe(source)
+    expect(new VPropertyUriDataValue(data, format, encoding).serialize()).toBe(uri)
+  })
+
   it.each([
     ['PHOTO', 'JPEG'],
     ['LOGO', 'PNG'],

@@ -16,7 +16,10 @@ import { VPropertyUriType } from "./VPropertyUriType"
 import type { VCardVersion } from "../VCardInterfaces"
 
 // VCard properties with runtime introspection capability
-export const propertyTypes: Record<string, new (...args: any[]) => VPropertyBase<any>> = {
+export const propertyTypes: Record<
+    string,
+    (new (...args: any[]) => VPropertyBase) | undefined
+> = {
     // RFC 6350
     SOURCE: VPropertyUriType,
     KIND: VPropertyTextType,

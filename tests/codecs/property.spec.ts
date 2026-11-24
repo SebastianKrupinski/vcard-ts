@@ -7,11 +7,15 @@ import { VPropertyNameValue } from '../../src/properties/VPropertyNameValue'
 import { VPropertyStringCollectionType } from '../../src/properties/VPropertyStringCollectionType'
 import { VPropertyTextType } from '../../src/properties/VPropertyTextType'
 import { VPropertyBase } from '../../src/properties/VPropertyBase'
+import { VPropertyValueBase } from '../../src/properties/VPropertyValueBase'
 
 describe('property codec', () => {
   it.each(['\r', '\n', '\r\n'])('rejects newline %j returned by a custom value serializer', newline => {
-    const value = { serialize: () => `safe${newline}EMAIL:evil@example.com` }
-    const property = new VPropertyBase('X-CUSTOM', value)
+    class UnsafeValue extends VPropertyValueBase {
+      serialize(): string { return `safe${newline}EMAIL:evil@example.com` }
+      type(): string { return 'TEXT' }
+    }
+    const property = new VPropertyBase('X-CUSTOM', new UnsafeValue())
 
     expect(() => encodeProperty(property)).toThrow('Invalid property line: unescaped line break')
   })
@@ -37,6 +41,34 @@ describe('property codec', () => {
 
   it.each(['NOTE', ':value', 'NOTE;TYPE:value'])('rejects a malformed property line %s', line => {
     expect(() => decodeProperty(line)).toThrow()
+  })
+
+  it.each([
+    'a.b.NOTE:x',
+    '.NOTE:x',
+    'item1.:x',
+    'item1..NOTE:x',
+    'NOTE :x',
+    'NO_TE:x',
+    'item_1.NOTE:x',
+    'é.NOTE:x',
+    'NO/TE:x',
+  ])('rejects an invalid property header in %s', line => {
+    expect(() => decodeProperty(line)).toThrow(`Invalid card property line: ${line}`)
+  })
+
+  it.each([
+    ['x-note', 'x-note', null],
+    ['a.NOTE', 'NOTE', 'a'],
+    ['1.X-TEST', 'X-TEST', '1'],
+    ['item-1.X-CUSTOM', 'X-CUSTOM', 'item-1'],
+  ])('preserves the valid header %s', (header, name, group) => {
+    const line = `${header};LANGUAGE=en:value.with:punctuation`
+    const property = decodeProperty(line)!
+
+    expect(property.name).toBe(name)
+    expect(property.group).toBe(group)
+    expect(encodeProperty(property)).toBe(line)
   })
 
   it('serializes a grouped text property with parameters', () => {

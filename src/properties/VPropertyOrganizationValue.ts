@@ -1,12 +1,14 @@
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
 import { decodePropertyValue, encodePropertyValue, splitPropertyValue } from "../codecs/propertyValue"
+import { VPropertyValueBase } from "./VPropertyValueBase"
 
-export class VPropertyOrganizationValue {
+export class VPropertyOrganizationValue extends VPropertyValueBase {
 
 	private _name: string
 	private _units: string[]
 
 	constructor(name: string = '', units: string[] = []) {
+		super()
 		this._name = name
 		this._units = units
 	}

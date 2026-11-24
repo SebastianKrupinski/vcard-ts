@@ -2,8 +2,9 @@ import { keepableSource } from "../codecs/contentLine"
 import { formatTime, parseTime } from "../codecs/temporal"
 import { VCardVersion } from "../VCardInterfaces"
 import { VParameterValueOptions } from "../parameters/VParameterTypes"
+import { VPropertyValueBase } from "./VPropertyValueBase"
 
-export class VPropertyTimeValue {
+export class VPropertyTimeValue extends VPropertyValueBase {
 
 	private _hour: number | null = null
 	private _minute: number | null = null
@@ -12,6 +13,7 @@ export class VPropertyTimeValue {
 	private _source: string | null = null
 
 	constructor(hour: number | null = null, minute: number | null = null, second: number | null = null, offset: number | null = null) {
+		super()
 		this._hour = hour
 		this._minute = minute
 		this._second = second

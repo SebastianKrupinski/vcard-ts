@@ -39,6 +39,19 @@ function pad(value: number, length = 2): string {
 	return String(value).padStart(length, '0')
 }
 
+function isValidDate({ year, month, day }: DateFields): boolean {
+	if (![year, month, day].every(field => field === null || Number.isInteger(field))
+		|| !inRange(year, 0, 9999) || !inRange(month, 1, 12) || !inRange(day, 1, 31)) {
+		return false
+	}
+	if (month === null || day === null) return true
+
+	// With no year, February 29 is a valid recurring calendar date.
+	const leapYear = year === null || (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0))
+	const daysInMonth = month === 2 ? (leapYear ? 29 : 28) : ([4, 6, 9, 11].includes(month) ? 30 : 31)
+	return day <= daysInMonth
+}
+
 /** Parse any supported date form, or return null if the text isn't a valid date. */
 export function parseDate(value: string): DateFields | null {
 	for (const pattern of DATE_PATTERNS) {
@@ -50,7 +63,7 @@ export function parseDate(value: string): DateFields | null {
 			month: numberOrNull(groups.month),
 			day: numberOrNull(groups.day),
 		}
-		return inRange(fields.month, 1, 12) && inRange(fields.day, 1, 31) ? fields : null
+		return isValidDate(fields) ? fields : null
 	}
 	return null
 }
@@ -97,6 +110,9 @@ export function formatDate({ year, month, day }: DateFields, extended: boolean):
 	if (year !== null && month === null && day !== null) {
 		throw new Error('Invalid date value: a date with a year and day must also have a month')
 	}
+	if (!isValidDate({ year, month, day })) {
+		throw new Error('Invalid date value: fields do not describe a valid calendar date')
+	}
 
 	const separator = extended ? '-' : ''
 	if (year !== null) {
@@ -122,7 +138,15 @@ function formatOffset(offset: number | null, extended: boolean): string {
 
 /** Format a time in the standard form: extended for vCard 3.0, basic for 4.0. */
 export function formatTime({ hour, minute, second, offset }: TimeFields, extended: boolean): string {
-	if (hour === null && minute === null && second === null) return ''
+	if (![hour, minute, second, offset].every(field => field === null || Number.isInteger(field))
+		|| !inRange(hour, 0, 23) || !inRange(minute, 0, 59) || !inRange(second, 0, 60)
+		|| !inRange(offset, -1439, 1439)) {
+		throw new Error('Invalid time value: fields must be integers within their allowed ranges')
+	}
+	if (hour === null && minute === null && second === null) {
+		if (offset !== null) throw new Error('Invalid time value: a UTC offset requires a time')
+		return ''
+	}
 	if (hour !== null && minute === null && second !== null) {
 		throw new Error('Invalid time value: a time with an hour and second must also have a minute')
 	}

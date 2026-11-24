@@ -8,7 +8,7 @@ export class VPropertyTextOrUriType extends VPropertyUriOrTextType {
 	constructor(
 		name: string,
 		value?: string | VPropertyUriValue,
-		group?: string,
+		group?: string | null,
 		params?: VParameterCollectionInterface,
 	) {
 		super(name, value, group, params, VParameterValueOptions.TEXT)

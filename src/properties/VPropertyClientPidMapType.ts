@@ -7,13 +7,15 @@ export class VPropertyClientPidMapType extends VPropertyBase<VPropertyClientPidM
 	constructor(
 		name: string,
 		value?: string | VPropertyClientPidMapValue,
-		group?: string,
+		group?: string | null,
 		params?: VParameterCollectionInterface,
 	) {
-		if (typeof value === 'string') {
-			value = new VPropertyClientPidMapValue().deserialize(value)
-		}
 		super(name, value, group, params)
+	}
+
+	deserialize(value: string): this {
+		this._value = new VPropertyClientPidMapValue().deserialize(value)
+		return this
 	}
 
 }

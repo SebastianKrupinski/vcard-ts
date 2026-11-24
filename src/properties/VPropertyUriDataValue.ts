@@ -1,10 +1,14 @@
-export class VPropertyUriDataValue {
+import { VParameterValueOptions } from '../parameters/VParameterTypes'
+import { VPropertyValueBase } from './VPropertyValueBase'
+
+export class VPropertyUriDataValue extends VPropertyValueBase {
 
 	private _data: string | null = null
 	private _format: string | null = null
 	private _encoding: string | null = null
 
 	constructor(data?: string, format?: string | null, encoding?: string | null) {
+		super()
 		this._data = data ?? null
 		this._format = format ?? null
 		this._encoding = encoding ?? null
@@ -28,7 +32,13 @@ export class VPropertyUriDataValue {
 	}
 
 	serialize(): string {
-		return 'data:' + this._format + ';' + this._encoding + ',' + this._data
+		const format = this._format ?? ''
+		const encoding = this._encoding ? `;${this._encoding}` : ''
+		return `data:${format}${encoding},${this._data ?? ''}`
+	}
+
+	type(): string {
+		return VParameterValueOptions.URI
 	}
 
 	get data(): string | null {

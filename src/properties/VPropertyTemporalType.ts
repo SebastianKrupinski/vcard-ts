@@ -12,42 +12,40 @@ export class VPropertyTemporalType extends VPropertyBase<VPropertyDateValue|VPro
 	constructor(
 	       name: string,
 	       value?: string | VPropertyDateValue | VPropertyTimeValue | VPropertyDateTimeValue | VPropertyTimestampValue,
-	       group?: string,
+	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
-		if (typeof value === 'string') {
-			// Try to get the VALUE parameter if present
-			const paramValue = params?.VALUE?.value?.toUpperCase()
-			function detectTemporalType(propertyName: string, propertyValue: string, paramValue?: string): 'datetime' | 'date' | 'time' | 'timestamp' | 'text' {
-				if (paramValue === VParameterValueOptions.TEXT) return 'text'
-				if (paramValue === VParameterValueOptions.TIMESTAMP) return 'timestamp'
-				if (paramValue === VParameterValueOptions.DATE_TIME) return 'datetime'
-				if (paramValue === VParameterValueOptions.DATE) return 'date'
-				if (paramValue === VParameterValueOptions.TIME) return 'time'
-				if ((propertyName === 'REV' || propertyName === 'CREATED') && propertyValue.includes('T')) return 'timestamp'
-				if (propertyValue.startsWith('T')) {
-					return 'time'
-				} else if (propertyValue.includes('T')) {
-					return 'datetime'
-				} else {
-					return 'date'
-				}
-			}
+		super(name, value, group, params, [
+			VParameterValueOptions.DATE,
+			VParameterValueOptions.TIME,
+			VParameterValueOptions.DATE_TIME,
+			VParameterValueOptions.TIMESTAMP,
+		])
+	}
 
-			const format = detectTemporalType(name.toUpperCase(), value, paramValue)
-			if (format === 'timestamp') {
-				value = new VPropertyTimestampValue().deserialize(value)
-			} else if (format === 'datetime') {
-				value = new VPropertyDateTimeValue().deserialize(value)
-			} else if (format === 'date') {
-				value = new VPropertyDateValue().deserialize(value)
-			} else if (format === 'time') {
-				value = new VPropertyTimeValue().deserialize(value)
-			} else {
-				value = decodePropertyValue(value)
-			}
+	deserialize(value: string, encoded: boolean = true): this {
+		const valueType = this.params.VALUE?.value?.toUpperCase()
+		const name = this.name.toUpperCase()
+		if (valueType === VParameterValueOptions.TEXT) {
+			this._value = encoded ? decodePropertyValue(value) : value
+		} else if (valueType === VParameterValueOptions.TIMESTAMP) {
+			this._value = new VPropertyTimestampValue().deserialize(value)
+		} else if (valueType === VParameterValueOptions.DATE_TIME) {
+			this._value = new VPropertyDateTimeValue().deserialize(value)
+		} else if (valueType === VParameterValueOptions.DATE) {
+			this._value = new VPropertyDateValue().deserialize(value)
+		} else if (valueType === VParameterValueOptions.TIME) {
+			this._value = new VPropertyTimeValue().deserialize(value)
+		} else if ((name === 'REV' || name === 'CREATED') && value.includes('T')) {
+			this._value = new VPropertyTimestampValue().deserialize(value)
+		} else if (value.startsWith('T')) {
+			this._value = new VPropertyTimeValue().deserialize(value)
+		} else if (value.includes('T')) {
+			this._value = new VPropertyDateTimeValue().deserialize(value)
+		} else {
+			this._value = new VPropertyDateValue().deserialize(value)
 		}
-		super(name, value, group, params)
+		return this
 	}
 
 }

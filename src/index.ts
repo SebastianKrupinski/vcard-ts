@@ -8,6 +8,8 @@ export * from './parameters/VParameterTypes'
 
 export * from './properties/VPropertyInterfaces'
 export * from './properties/VPropertyBase'
+export * from './properties/VPropertyValueBase'
+export * from './properties/VPropertyValueInterface'
 export * from './properties/VPropertyCollection'
 export * from './properties/VPropertyTypes'
 export * from './properties/VPropertyAddressType'

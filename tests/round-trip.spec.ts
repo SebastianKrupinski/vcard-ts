@@ -23,7 +23,7 @@ describe('trailing whitespace in property values', () => {
   it.each(['3.0', '4.0'] as const)('preserves trailing whitespace after editing and folding in %s', version => {
     const parsed = deserializeCard(card(version, 'NOTE:original'))
     const value = `${'long text '.repeat(12)} \t`
-    parsed.first('NOTE')!.value = value
+    parsed.notes[0].value = value
 
     const encoded = serialize(parsed)
     expect(encoded).toContain('\r\n ')
@@ -47,7 +47,7 @@ describe('trailing whitespace in property values', () => {
 describe('newlines in edited text', () => {
   it.each(['\r', '\r\n', '\n'])('keeps newline %j inside property and parameter values', newline => {
     const parsed = deserializeCard(card('4.0', 'NOTE;LABEL=original;TYPE=work:original'))
-    const note = parsed.first('NOTE')!
+    const note = parsed.notes[0]
     const value = `one${newline}EMAIL:evil@example.com`
     note.value = value
     note.params.LABEL!.value = value
@@ -121,17 +121,12 @@ function expectToRoundTrip(source: string): void {
   expect(contentLines(serialize(deserializeCard(source)))).toEqual(contentLines(source))
 }
 
-function expectToRoundTripOrReject(source: string): void {
-  let output: string
-  try {
-    output = serialize(deserializeCard(source))
-  } catch {
-    return
-  }
-  expect(contentLines(output)).toEqual(contentLines(source))
-}
-
 describe('round trip against source text', () => {
+  it.each<Version>(['3.0', '4.0'])('rejects multiple group separators in %s', version => {
+    expect(() => deserializeCard(card(version, 'a.b.NOTE:x')))
+      .toThrow('Invalid card property line: a.b.NOTE:x')
+  })
+
   it.each([
     'valid/v3-basic.vcf',
     'valid/v3-conformance.vcf',
@@ -169,6 +164,8 @@ describe('round trip against source text', () => {
     ['4.0', 'TZ;VALUE=text:Raleigh/North America'],
     ['3.0', 'GEO:37.386013;-122.082932'],
     ['4.0', 'GEO:geo:46.772673,-71.282945'],
+    ['4.0', 'GEO:geo:46.772673,-71.282945,10'],
+    ['4.0', 'GEO:geo:46.772673,-71.282945;u=20'],
     ['4.0', 'BDAY;VALUE=text:circa 1800'],
     ['3.0', 'PHOTO;ENCODING=b;TYPE=JPEG:AAAA'],
     ['3.0', 'SOUND;ENCODING=b;TYPE=WAV:AAAA'],
@@ -190,40 +187,43 @@ describe('round trip against source text', () => {
     ['4.0', 'ADR;LABEL="1 Main St, Town":;;1 Main St;Town;;;'],
     ['4.0', 'EMAIL;PID="1.1,2.1":jane@example.com'],
     ['4.0', 'N;SORT-AS="Doe,Jane":Doe;Jane;;;'],
+    ['4.0', 'N:Doe;Jane;Ann,Lee;;'],
+    ['4.0', 'ADR:;;1 Main,Apt 2;Town;;;'],
     ['4.0', 'ORG:Acme\\, Inc;Sales\\;EMEA;West'],
     ['4.0', 'NICKNAME:Jim,Jimmie\\, Jr'],
     ['4.0', 'GENDER:M;Fellow'],
     ['4.0', 'RELATED;TYPE=friend:urn:uuid:1'],
     ['4.0', 'CLIENTPIDMAP:1;urn:uuid:1'],
+    ['4.0', 'UID:plain-id'],
+    ['3.0', 'KEY;ENCODING=b:AAAA'],
     ['4.0', 'X-CUSTOM;X-PARAM=a:b\\,c\\;d'],
   ])('%s %s', (version, line) => {
     expectToRoundTrip(card(version, line))
   })
 })
 
-// Each case below is a confirmed bug. `it.fails` keeps the suite green until the
-// bug is fixed, then fails to say the case should move up to the passing list.
-describe('known round-trip bugs', () => {
-  it.fails.each<[Version, string]>([
-    // Inline binary on properties that can also hold a URI or text
-    ['3.0', 'KEY;ENCODING=b:AAAA'],
-
-    // Geographic URI details
-    ['4.0', 'GEO:geo:46.772673,-71.282945,10'],
-    ['4.0', 'GEO:geo:46.772673,-71.282945;u=20'],
-
-    // Comma-separated lists inside structured components
-    ['4.0', 'N:Doe;Jane;Ann,Lee;;'],
-    ['4.0', 'ADR:;;1 Main,Apt 2;Town;;;'],
-  ])('%s %s', (version, line) => {
-    expectToRoundTrip(card(version, line))
+describe('unsupported text escapes', () => {
+  it.each<Version>(['3.0', '4.0'])('rejects a backslash-colon escape in %s', version => {
+    expect(() => deserializeCard(card(version, String.raw`NOTE:a\:b`)))
+      .toThrow('Invalid text escape')
   })
 
-  it.fails.each<[Version, string]>([
-    ['4.0', 'GEO:not-a-geo'],
-    ['4.0', 'a.b.NOTE:x'],
-    ['4.0', 'NOTE:a\\:b'],
-  ])('%s %s should be kept or rejected, not altered', (version, line) => {
-    expectToRoundTripOrReject(card(version, line))
+  it.each([
+    String.raw`X-CUSTOM:a\:b`,
+    String.raw`N:Doe;Jane\q;;;`,
+    String.raw`ADR:;;1 Main\q;Town;;;`,
+    String.raw`ORG:Acme;Team\q`,
+    String.raw`CATEGORIES:one,two\q`,
+    String.raw`GENDER:;person\q`,
+    String.raw`UID;VALUE=text:a\:b`,
+  ])('rejects unsupported escapes in %s', line => {
+    expect(() => deserializeCard(card('4.0', line))).toThrow('Invalid text escape')
+  })
+
+  it('keeps literal backslashes supplied through application text', () => {
+    const parsed = deserializeCard(card('4.0', 'NOTE:original'))
+    const literal = String.raw`a\:b\q` + '\\'
+    parsed.notes[0].value = literal
+    expect(deserializeCard(serialize(parsed)).notes[0].value).toBe(literal)
   })
 })

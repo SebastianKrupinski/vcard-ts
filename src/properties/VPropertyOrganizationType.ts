@@ -7,13 +7,15 @@ export class VPropertyOrganizationType extends VPropertyBase<VPropertyOrganizati
 	constructor(
 	       name: string,
 	       value?: string | VPropertyOrganizationValue,
-	       group?: string,
+	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
-		if (typeof value === 'string') {
-			value = new VPropertyOrganizationValue().deserialize(value)
-		}
 		super(name, value, group, params)
+	}
+
+	deserialize(value: string): this {
+		this._value = new VPropertyOrganizationValue().deserialize(value)
+		return this
 	}
 
 }

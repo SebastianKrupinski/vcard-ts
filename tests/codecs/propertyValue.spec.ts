@@ -11,6 +11,15 @@ import { VPropertyOrganizationValue } from '../../src/properties/VPropertyOrgani
 import { VPropertyGenderValue } from '../../src/properties/VPropertyGenderValue'
 
 describe('property value codec', () => {
+  it.each([String.raw`a\:b`, String.raw`a\tb`, String.raw`a\qb`, 'a\\'])('rejects unsupported text escapes in %j', value => {
+    expect(() => decodePropertyValue(value)).toThrow('Invalid text escape')
+  })
+
+  it('preserves escaped literal backslashes before arbitrary characters', () => {
+    const literal = String.raw`path\q\:end` + '\\'
+    expect(decodePropertyValue(encodePropertyValue(literal))).toBe(literal)
+  })
+
   it.each(['\r', '\r\n', '\n'])('normalizes and escapes newline %j', newline => {
     const encoded = encodePropertyValue(`one${newline}EMAIL:evil@example.com`)
 

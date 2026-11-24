@@ -7,13 +7,15 @@ export class VPropertyGenderType extends VPropertyBase<VPropertyGenderValue> {
 	constructor(
 	       name: string,
 	       value?: string | VPropertyGenderValue,
-	       group?: string,
+	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
-		if (typeof value === 'string') {
-			value = new VPropertyGenderValue().deserialize(value)
-		}
 		super(name, value, group, params)
+	}
+
+	deserialize(value: string): this {
+		this._value = new VPropertyGenderValue().deserialize(value)
+		return this
 	}
 
 }

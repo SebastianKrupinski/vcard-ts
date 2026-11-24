@@ -1,11 +1,85 @@
 import { describe, expect, it } from 'vitest'
 
-import { deserializeCard, serialize } from '../src/VCard'
+import { deserializeCard, serialize, serializeProperty } from '../src/VCard'
 import { VPropertyTimeZoneType } from '../src/properties/VPropertyTimeZoneType'
 import { VPropertyUriValue } from '../src/properties/VPropertyUriValue'
 import { VPropertyUtcOffsetValue } from '../src/properties/VPropertyUtcOffsetValue'
 
 describe('time zone properties', () => {
+  it.each(['', 'nonsense', '+5', '+05:', '+05:0', '0500', '+24', '+2400', '+00:60'])
+    ('rejects malformed encoded UTC offset %j', offset => {
+      const source = ['BEGIN:VCARD', 'VERSION:4.0', 'FN:Jane', `TZ;VALUE=utc-offset:${offset}`, 'END:VCARD'].join('\r\n')
+      expect(() => deserializeCard(source)).toThrow('Invalid UTC offset value')
+
+      const value = new VPropertyUtcOffsetValue().deserialize('-05:00')
+      expect(() => value.deserialize(offset)).toThrow('Invalid UTC offset value')
+      expect(value.offset).toBe(-300)
+      expect(value.serialize()).toBe('-05:00')
+    })
+
+  it('rejects a trailing line break in the offset value model', () => {
+    expect(() => new VPropertyUtcOffsetValue().deserialize('+0500\n'))
+      .toThrow('Invalid UTC offset value')
+  })
+
+  it.each([1440, -1440, 1.5, NaN, Infinity, null])('rejects incomplete or invalid numeric offset %j on serialization', offset => {
+    const property = new VPropertyTimeZoneType('TZ', new VPropertyUtcOffsetValue(offset))
+    expect(() => serializeProperty(property)).toThrow('Invalid UTC offset value')
+  })
+
+  it('rejects an invalid numeric assignment without replacing the property value', () => {
+    const property = new VPropertyTimeZoneType('TZ', '-05:00')
+    expect(() => { property.value = '+24:00' }).toThrow('Invalid UTC offset value')
+    expect(serializeProperty(property)).toBe('TZ;VALUE=UTC-OFFSET:-05:00')
+  })
+
+  it('does not serialize stale source text after an invalid numeric edit', () => {
+    const value = new VPropertyUtcOffsetValue().deserialize('+05')
+    value.offset = 1440
+    expect(() => value.serialize()).toThrow('Invalid UTC offset value')
+  })
+
+  it.each([
+    ['+05', 300],
+    ['-03', -180],
+    ['+00', 0],
+    ['-00', -0],
+    ['+23', 1380],
+  ])('preserves the hour-only UTC offset %s', (offset, minutes) => {
+    const line = `TZ;VALUE=utc-offset:${offset}`
+    const source = ['BEGIN:VCARD', 'VERSION:4.0', 'FN:Jane Doe', line, 'END:VCARD', ''].join('\r\n')
+    const card = deserializeCard(source)
+
+    expect(card.timeZones[0].value).toBeInstanceOf(VPropertyUtcOffsetValue)
+    expect((card.timeZones[0].value as VPropertyUtcOffsetValue).offset).toBe(minutes)
+    expect(serialize(card)).toBe(source)
+
+    const constructed = new VPropertyTimeZoneType('TZ', offset, null, {
+      VALUE: { name: 'VALUE', value: 'utc-offset' },
+    })
+    expect(serializeProperty(constructed)).toBe(line)
+
+    card.timeZones[0].value = '+0100'
+    card.timeZones[0].value = offset
+    expect(serializeProperty(card.timeZones[0])).toBe(line)
+  })
+
+  it('writes minutes when an hour-only offset is edited', () => {
+    const value = new VPropertyUtcOffsetValue().deserialize('+05')
+    value.offset = 330
+
+    expect(value.serialize()).toBe('+0530')
+  })
+
+  it('applies an explicit format change to an hour-only offset', () => {
+    const value = new VPropertyUtcOffsetValue().deserialize('-03')
+    value.extended = true
+    expect(value.serialize()).toBe('-03:00')
+
+    value.extended = false
+    expect(value.serialize()).toBe('-0300')
+  })
+
   it('uses text as the default vCard 4.0 value', () => {
     const card = deserializeCard([
       'BEGIN:VCARD',
