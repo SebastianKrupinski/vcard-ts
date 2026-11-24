@@ -224,6 +224,10 @@ the card's version: extended for 3.0 (`1985-04-12T10:22:00Z`) and basic for 4.0
 
 Text that isn't a valid date, such as `BDAY:garbage`, leaves the fields `null`
 but stays available through `source` and is still written back unchanged.
+Impossible calendar dates, such as February 31 or February 29 in a non-leap year,
+follow the same rule. February 29 without a year remains valid. Dates constructed
+or edited in code must have valid integer fields and a valid calendar day;
+serialization throws if they do not.
 
 ## Generic property access
 

@@ -19,6 +19,72 @@ function card(version: '3.0' | '4.0', line: string) {
   ].join('\r\n'))
 }
 
+describe('calendar date validation', () => {
+  it.each(['20230229', '19000229', '20240230', '20260431', '--0230', '--0431'])
+    ('keeps impossible date %s as source text without exposing date fields', source => {
+      const parsed = card('4.0', `BDAY:${source}`)
+      expect(parsed.birthDay?.value).toMatchObject({ year: null, month: null, day: null, source })
+      expect(serialize(parsed)).toContain(`BDAY:${source}\r\n`)
+    })
+
+  it.each([
+    ['20000229', 2000, 2, 29],
+    ['20240229', 2024, 2, 29],
+    ['00000229', 0, 2, 29],
+    ['--0229', null, 2, 29],
+    ['---31', null, null, 31],
+  ] as const)('accepts valid full or partial date %s', (source, year, month, day) => {
+    const value = new VPropertyDateValue().deserialize(source)
+    expect(value).toMatchObject({ year, month, day })
+    expect(value.serialize()).toBe(source)
+    expect(new VPropertyDateValue(year, month, day).serialize()).toBe(source)
+  })
+
+  it.each([
+    [2023, 2, 29],
+    [1900, 2, 29],
+    [2024, 2, 30],
+    [2026, 4, 31],
+    [null, 2, 30],
+    [2026, 13, 1],
+    [2026, 0, 1],
+    [2026, 1, 0],
+    [2026, 1, 32],
+    [-1, 1, 1],
+    [10000, 1, 1],
+    [2026.5, 1, 1],
+    [2026, 1.5, 1],
+    [2026, 1, 1.5],
+    [NaN, 1, 1],
+    [2026, Infinity, 1],
+  ] as const)('rejects constructed date fields %j', (year, month, day) => {
+    const value = new VPropertyDateValue(year, month, day)
+    expect(() => value.serialize(VCardVersion.V4_0)).toThrow('Invalid date value')
+    expect(() => value.serialize(VCardVersion.V3_0)).toThrow('Invalid date value')
+  })
+
+  it('validates calendar dates in parsed timestamps and date-times', () => {
+    const timestamp = new VPropertyTimestampValue().deserialize('20230229T120000Z')
+    expect(timestamp).toMatchObject({ year: null, month: null, day: null, hour: null })
+    expect(timestamp.serialize()).toBe('20230229T120000Z')
+
+    const dateTime = new VPropertyDateTimeValue().deserialize('2023-02-29T12:00:00Z')
+    expect(dateTime.date).toMatchObject({ year: null, month: null, day: null })
+    expect(dateTime.serialize()).toBe('2023-02-29T12:00:00Z')
+  })
+
+  it('rejects invalid constructed or edited dates inside timestamps and date-times', () => {
+    expect(() => new VPropertyTimestampValue(2023, 2, 29, 12, 0, 0).serialize())
+      .toThrow('Invalid date value')
+    const dateTime = new VPropertyDateTimeValue(new VPropertyDateValue(2023, 2, 29), new VPropertyTimeValue(12, 0))
+    expect(() => dateTime.serialize()).toThrow('Invalid date value')
+
+    const value = new VPropertyDateValue().deserialize('20240229')
+    value.year = 2023
+    expect(() => value.serialize()).toThrow('Invalid date value')
+  })
+})
+
 describe('temporal properties', () => {
   it('deserializes date values', () => {
     const card = deserializeCard([
