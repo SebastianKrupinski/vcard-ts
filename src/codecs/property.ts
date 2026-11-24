@@ -60,25 +60,15 @@ function encodeTypedPropertyValue(property: VPropertyBaseInterface, version: VCa
 	throw new Error(`Invalid property value: ${property.name} must be text, a list, or a VPropertyValueBase`)
 }
 
-/**
- *
- * @param data
- */
+/** Read an optional group and property name without discarding header text. */
 function extractPropertyHeader(data: string): { name: string; group: string | null; remaining: string } {
-
-	const header = data.match(/^(.*?)[\:;]/)?.[1]
+	const header = data.match(/^(?:([a-z0-9-]+)\.)?([a-z0-9-]+)(?=[:;])/i)
 	if (!header) {
 		throw new Error('Invalid card property line: ' + data)
 	}
-	const remaining = data.slice(header.length) // +1 to skip the ':' or ';'
-	let propertyName: string | null = null
-	let propertyGroup: string | null = null
-	if (header.indexOf('.') >= 1) {
-		[propertyGroup, propertyName] = header.split('.', 2)
-	} else {
-		propertyName = header
-		propertyGroup = null
+	return {
+		name: header[2],
+		group: header[1] ?? null,
+		remaining: data.slice(header[0].length),
 	}
-
-	return { name: propertyName, group: propertyGroup, remaining }
 }

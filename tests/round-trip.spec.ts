@@ -132,6 +132,11 @@ function expectToRoundTripOrReject(source: string): void {
 }
 
 describe('round trip against source text', () => {
+  it.each<Version>(['3.0', '4.0'])('rejects multiple group separators in %s', version => {
+    expect(() => deserializeCard(card(version, 'a.b.NOTE:x')))
+      .toThrow('Invalid card property line: a.b.NOTE:x')
+  })
+
   it.each([
     'valid/v3-basic.vcf',
     'valid/v3-conformance.vcf',
@@ -211,7 +216,6 @@ describe('round trip against source text', () => {
 // bug is fixed, then fails to say the case should move up to the passing list.
 describe('known round-trip bugs', () => {
   it.fails.each<[Version, string]>([
-    ['4.0', 'a.b.NOTE:x'],
     ['4.0', 'NOTE:a\\:b'],
   ])('%s %s should be kept or rejected, not altered', (version, line) => {
     expectToRoundTripOrReject(card(version, line))

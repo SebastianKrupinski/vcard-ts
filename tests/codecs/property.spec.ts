@@ -43,6 +43,34 @@ describe('property codec', () => {
     expect(() => decodeProperty(line)).toThrow()
   })
 
+  it.each([
+    'a.b.NOTE:x',
+    '.NOTE:x',
+    'item1.:x',
+    'item1..NOTE:x',
+    'NOTE :x',
+    'NO_TE:x',
+    'item_1.NOTE:x',
+    'é.NOTE:x',
+    'NO/TE:x',
+  ])('rejects an invalid property header in %s', line => {
+    expect(() => decodeProperty(line)).toThrow(`Invalid card property line: ${line}`)
+  })
+
+  it.each([
+    ['x-note', 'x-note', null],
+    ['a.NOTE', 'NOTE', 'a'],
+    ['1.X-TEST', 'X-TEST', '1'],
+    ['item-1.X-CUSTOM', 'X-CUSTOM', 'item-1'],
+  ])('preserves the valid header %s', (header, name, group) => {
+    const line = `${header};LANGUAGE=en:value.with:punctuation`
+    const property = decodeProperty(line)!
+
+    expect(property.name).toBe(name)
+    expect(property.group).toBe(group)
+    expect(encodeProperty(property)).toBe(line)
+  })
+
   it('serializes a grouped text property with parameters', () => {
     const property = new VPropertyTextType(
       'NOTE',
