@@ -1,4 +1,5 @@
 import { VParameterCollectionInterface } from '../parameters/VParameterInterfaces'
+import { VParameterValueOptions } from '../parameters/VParameterTypes'
 import { VPropertyBase } from './VPropertyBase'
 import { VPropertyUriDataValue } from './VPropertyUriDataValue'
 import { VPropertyUriValue } from './VPropertyUriValue'
@@ -11,14 +12,14 @@ export class VPropertyUriType extends VPropertyBase<VPropertyUriValue|VPropertyU
 	       group?: string | null,
 	       params?: VParameterCollectionInterface,
 	) {
-		if (typeof value === 'string') {
-			if (value.startsWith('data:')) {
-				value = new VPropertyUriDataValue().deserialize(value)
-			} else {
-				value = new VPropertyUriValue().deserialize(value)
-			}
-		}
-		super(name, value, group, params)
+		super(name, value, group, params, VParameterValueOptions.URI)
+	}
+
+	deserialize(value: string): this {
+		this._value = value.startsWith('data:')
+			? new VPropertyUriDataValue().deserialize(value)
+			: new VPropertyUriValue().deserialize(value)
+		return this
 	}
 
 }

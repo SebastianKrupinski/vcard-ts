@@ -11,15 +11,18 @@ export class VPropertyUriOrTextType extends VPropertyBase<VPropertyUriValue | st
 		value?: string | VPropertyUriValue,
 		group?: string | null,
 		params?: VParameterCollectionInterface,
-		defaultType: string = VParameterValueOptions.URI,
+		defaultValueType: string = VParameterValueOptions.URI,
 	) {
-		if (typeof value === 'string') {
-			const valueType = params?.VALUE?.value?.toUpperCase() ?? defaultType
-			value = valueType === VParameterValueOptions.URI
-				? new VPropertyUriValue().deserialize(value)
-				: decodePropertyValue(value)
-		}
-		super(name, value, group, params)
+		super(name, value, group, params, defaultValueType)
+	}
+
+	deserialize(value: string, encoded: boolean = true): this {
+		const declared = this.params.VALUE?.value?.toUpperCase()
+		const isUri = declared ? declared === VParameterValueOptions.URI : this._defaultValueType === VParameterValueOptions.URI
+		this._value = isUri
+			? new VPropertyUriValue().deserialize(value)
+			: encoded ? decodePropertyValue(value) : value
+		return this
 	}
 
 }

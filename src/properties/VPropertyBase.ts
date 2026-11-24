@@ -1,3 +1,4 @@
+import { decodePropertyValue } from "../codecs/propertyValue"
 import { VParameterCollectionInterface } from "../parameters/VParameterInterfaces"
 import { VParameterTags, VParameterValueOptions } from "../parameters/VParameterTypes"
 import { VPropertyBaseInterface } from "./VPropertyInterfaces"
@@ -10,18 +11,20 @@ export class VPropertyBase<T = string | string[] | VPropertyValueBase> implement
 	protected _group: string | null = null
 	protected _params: VParameterCollectionInterface
 	protected _value: T | null = null
+	protected _defaultValueType: string | readonly string[] = VParameterValueOptions.TEXT
 
+	constructor(name: string, value?: T, group?: string | null, params?: VParameterCollectionInterface, defaultValueType?: string | readonly string[])
+	constructor(name: string, value: T | string | undefined, group?: string | null, params?: VParameterCollectionInterface, defaultValueType?: string | readonly string[])
 	constructor(
 		name: string,
-		value?: T,
+		value?: T | string,
 		group?: string | null,
 		params?: VParameterCollectionInterface,
+		defaultValueType: string | readonly string[] = VParameterValueOptions.TEXT,
 	) {
 		this._id = crypto.randomUUID()
 		this._name = name
-		if (value !== undefined) {
-			this._value = value
-		}
+		this._defaultValueType = defaultValueType
 		if (group !== undefined) {
 			this._group = group
 		}
@@ -30,6 +33,18 @@ export class VPropertyBase<T = string | string[] | VPropertyValueBase> implement
 		} else {
 			this._params = {}
 		}
+		if (value !== undefined) {
+			this.value = value
+		}
+	}
+
+	/**
+	 * Read a vCard value without changing its parameters. Constructors and value
+	 * assignments pass encoded=false to preserve literal application text.
+	 */
+	deserialize(value: string, encoded: boolean = true): this {
+		this._value = (encoded ? decodePropertyValue(value) : value) as T
+		return this
 	}
 
 	get id(): string {
@@ -72,20 +87,31 @@ export class VPropertyBase<T = string | string[] | VPropertyValueBase> implement
 		return this._value
 	}
 
-	set value(value: T | null) {
-		if (value === undefined) {
-			value = null
-		}
-		if (value !== null) {
-			if (value instanceof VPropertyValueBase) {
-				this._params[VParameterTags.VALUE] = { name: VParameterTags.VALUE, value: value.type() }
-			} else {
-				this._params[VParameterTags.VALUE] = { name: VParameterTags.VALUE, value: VParameterValueOptions.TEXT }
-			}
-		} else {
+	/** Text is converted the same way as in the constructor. */
+	set value(value: T | string | null) {
+		if (value === undefined || value === null) {
 			delete this._params[VParameterTags.VALUE]
+			this._value = null
+			return
 		}
-		this._value = value
+		if (typeof value === 'string') {
+			this.deserialize(value, false)
+		} else {
+			this._value = value
+		}
+		const type = this.valueType()
+		const declared = this._params[VParameterTags.VALUE]?.value.toString()
+		if (declared?.toUpperCase() === type.toUpperCase()) return
+		const defaults = this._defaultValueType
+		if (typeof defaults === 'string' ? type === defaults : defaults.includes(type)) {
+			delete this._params[VParameterTags.VALUE]
+		} else {
+			this._params[VParameterTags.VALUE] = { name: VParameterTags.VALUE, value: type }
+		}
+	}
+
+	private valueType(): string {
+		return this._value instanceof VPropertyValueBase ? this._value.type() : VParameterValueOptions.TEXT
 	}
 
 	get hasValue(): boolean {
@@ -96,7 +122,7 @@ export class VPropertyBase<T = string | string[] | VPropertyValueBase> implement
 		if (this.params[VParameterTags.VALUE]) {
 			return this.params[VParameterTags.VALUE].value.toString()
 		}
-		return typeof this._value === 'string' ? VParameterValueOptions.TEXT : '';
+		return this.hasValue ? this.valueType() : ''
 	}
 
 	set type(value: string) {

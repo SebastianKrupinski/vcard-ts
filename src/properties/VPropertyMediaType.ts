@@ -13,18 +13,32 @@ export class VPropertyMediaType extends VPropertyBase<VPropertyBinaryValue | VPr
 		group?: string | null,
 		params?: VParameterCollectionInterface,
 	) {
-		if (typeof value === 'string') {
-			const encoding = params?.ENCODING?.value?.toUpperCase()
-			const valueType = params?.VALUE?.value?.toUpperCase()
-			if (encoding === VParameterEncodingOptions.B || valueType === VParameterValueOptions.BINARY) {
-				value = new VPropertyBinaryValue().deserialize(value)
-			} else if (/^data:/i.test(value)) {
-				value = new VPropertyUriDataValue().deserialize(value)
-			} else {
-				value = new VPropertyUriValue().deserialize(value)
-			}
+		super(name, value, group, params, VParameterValueOptions.URI)
+	}
+
+	deserialize(value: string): this {
+		const encoding = this.params.ENCODING?.value?.toUpperCase()
+		const valueType = this.params.VALUE?.value?.toUpperCase()
+		if (encoding === VParameterEncodingOptions.B || valueType === VParameterValueOptions.BINARY) {
+			this._value = new VPropertyBinaryValue().deserialize(value)
+		} else {
+			this._value = /^data:/i.test(value)
+				? new VPropertyUriDataValue().deserialize(value)
+				: new VPropertyUriValue().deserialize(value)
 		}
-		super(name, value, group, params)
+		return this
+	}
+
+	get value(): VPropertyBinaryValue | VPropertyUriDataValue | VPropertyUriValue | null {
+		return super.value
+	}
+
+	set value(value: string | VPropertyBinaryValue | VPropertyUriDataValue | VPropertyUriValue | null) {
+		// Refresh before assignment because callers can change ENCODING directly.
+		this._defaultValueType = this.params.ENCODING?.value?.toUpperCase() === VParameterEncodingOptions.B
+			? [VParameterValueOptions.URI, VParameterValueOptions.BINARY]
+			: VParameterValueOptions.URI
+		super.value = value
 	}
 
 }

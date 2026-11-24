@@ -197,6 +197,8 @@ describe('round trip against source text', () => {
     ['4.0', 'GENDER:M;Fellow'],
     ['4.0', 'RELATED;TYPE=friend:urn:uuid:1'],
     ['4.0', 'CLIENTPIDMAP:1;urn:uuid:1'],
+    ['4.0', 'UID:plain-id'],
+    ['3.0', 'KEY;ENCODING=b:AAAA'],
     ['4.0', 'X-CUSTOM;X-PARAM=a:b\\,c\\;d'],
   ])('%s %s', (version, line) => {
     expectToRoundTrip(card(version, line))
@@ -207,9 +209,6 @@ describe('round trip against source text', () => {
 // bug is fixed, then fails to say the case should move up to the passing list.
 describe('known round-trip bugs', () => {
   it.fails.each<[Version, string]>([
-    // Inline binary on properties that can also hold a URI or text
-    ['3.0', 'KEY;ENCODING=b:AAAA'],
-
     // Geographic URI details
     ['4.0', 'GEO:geo:46.772673,-71.282945,10'],
     ['4.0', 'GEO:geo:46.772673,-71.282945;u=20'],

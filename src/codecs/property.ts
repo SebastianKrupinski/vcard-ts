@@ -1,5 +1,5 @@
 import { decodeParameters, encodeParameters } from './parameter'
-import { decodePropertyValue, encodePropertyValue } from './propertyValue'
+import { encodePropertyValue } from './propertyValue'
 import { VPropertyBase } from '../properties/VPropertyBase'
 import { VPropertyTimeValue } from '../properties/VPropertyTimeValue'
 import { VParameterValueOptions } from '../parameters/VParameterTypes'
@@ -19,17 +19,8 @@ export function decodeProperty(data: string): VPropertyBase | null {
 	// The codec leaves the colon before the property value.
 	const rawValue = valueSource.slice(1)
 	// instantiate the property object
-	if (!name) {
-		return new VPropertyBase('', decodePropertyValue(rawValue), group, params)
-	}
-	const PropertyType = propertyTypes[name.toUpperCase()]
-	if (PropertyType === VPropertyBase) {
-		return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
-	}
-	if (PropertyType) {
-		return new PropertyType(name, rawValue, group, params)
-	}
-	return new VPropertyBase(name, decodePropertyValue(rawValue), group, params)
+	const PropertyType = propertyTypes[(name ?? '').toUpperCase()] ?? VPropertyBase
+	return new PropertyType(name ?? '', undefined, group, params).deserialize(rawValue)
 }
 
 export function encodeProperty(

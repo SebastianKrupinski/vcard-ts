@@ -81,6 +81,34 @@ requires `serialize(version?: VCardVersion): string` and `type(): string`. Custo
 values must extend it too, but don't need a property registry entry. Plain objects
 are rejected at compile time, and serializing one throws an error.
 
+### Strings and escaping
+
+Constructors and `.value` read a string the same way. Text is used exactly as
+written, so don't escape it. The library escapes it on output:
+
+```ts
+const note = new VPropertyTextType('NOTE', 'Line one\nDoe, Jane \\ Co')
+serializeProperty(note)  // NOTE:Line one\nDoe\, Jane \\ Co
+```
+
+Other properties convert the string to their value type, so assigning to a URL
+keeps it a URI:
+
+```ts
+card.urls[0].value = 'https://example.com/a,b;c'
+serializeProperty(card.urls[0])  // URL:https://example.com/a,b;c
+```
+
+Strings for structured properties use the vCard format, as in
+`new VPropertyNameType('N', 'Doe;Jane;;;')`. A string for a list property is one
+item, so pass an array for several. To read text that's already encoded for a vCard
+line, use `new VPropertyTextType('NOTE').deserialize('Doe\\, Jane')`.
+
+`VALUE` is only written when a property's value isn't the type readers assume, as
+with a URI in `TEL` or text in `BDAY`. An existing `VALUE` that still matches is kept.
+For a property that can hold several forms, set `property.type` first to choose how
+a later string is read.
+
 ## Typed property getters
 
 Common properties are available directly on the card. Singular properties

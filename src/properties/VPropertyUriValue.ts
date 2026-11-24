@@ -25,7 +25,7 @@ export class VPropertyUriValue extends VPropertyValueBase {
 	}
 
 	serialize(): string {
-		return `${this._scheme}:${this._reference}`
+		return this._scheme ? `${this._scheme}:${this._reference}` : this._reference
 	}
 
 	type(): string {

@@ -10,10 +10,13 @@ export class VPropertyStringCollectionType extends VPropertyBase<string[]> {
 		group?: string | null,
 		params?: VParameterCollectionInterface,
 	) {
-		if (typeof value === 'string') {
-			value = splitPropertyValue(value, ',').map(decodePropertyValue)
-		}
 		super(name, value, group, params)
+	}
+
+	/** Application text is one item, so a comma in it is kept rather than splitting it. */
+	deserialize(value: string, encoded: boolean = true): this {
+		this._value = encoded ? splitPropertyValue(value, ',').map(decodePropertyValue) : [value]
+		return this
 	}
 
 }
