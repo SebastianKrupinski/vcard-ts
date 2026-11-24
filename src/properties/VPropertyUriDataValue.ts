@@ -32,7 +32,9 @@ export class VPropertyUriDataValue extends VPropertyValueBase {
 	}
 
 	serialize(): string {
-		return 'data:' + this._format + ';' + this._encoding + ',' + this._data
+		const format = this._format ?? ''
+		const encoding = this._encoding ? `;${this._encoding}` : ''
+		return `data:${format}${encoding},${this._data ?? ''}`
 	}
 
 	type(): string {
