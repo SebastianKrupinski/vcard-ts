@@ -85,6 +85,66 @@ describe('calendar date validation', () => {
   })
 })
 
+describe('numeric time validation', () => {
+  it.each([
+    [-1, 0, 0, null],
+    [24, 0, 0, null],
+    [1.5, 0, 0, null],
+    [12, -1, 0, null],
+    [12, 60, 0, null],
+    [12, 0.5, 0, null],
+    [12, 0, -1, null],
+    [12, 0, 61, null],
+    [12, 0, 0.5, null],
+    [12, 0, 0, 1440],
+    [12, 0, 0, -1440],
+    [12, 0, 0, 0.5],
+    [NaN, 0, 0, null],
+    [12, Infinity, 0, null],
+    [12, 0, 0, NaN],
+    [null, null, null, 0],
+  ] as const)('rejects invalid time fields (%s, %s, %s, %s)', (hour, minute, second, offset) => {
+    const value = new VPropertyTimeValue(hour, minute, second, offset)
+    expect(() => value.serialize(VCardVersion.V4_0)).toThrow('Invalid time value')
+    expect(() => value.serialize(VCardVersion.V3_0)).toThrow('Invalid time value')
+  })
+
+  it.each([
+    [[0, 0, 0, 0], '000000Z'],
+    [[23, 59, 60, 1439], '235960+2359'],
+    [[23, 59, 59, -1439], '235959-2359'],
+    [[null, null, 60, null], '--60'],
+  ] as const)('supports boundary time fields %j', (fields, text) => {
+    const value = new VPropertyTimeValue(...fields)
+    expect(value.serialize()).toBe(text)
+    expect(new VPropertyTimeValue().deserialize(text)).toMatchObject({
+      hour: fields[0], minute: fields[1], second: fields[2], offset: fields[3],
+    })
+  })
+
+  it.each(['T126000', 'T120061', 'T120000+2400', 'T120000+0060'])
+    ('keeps invalid parsed time %s as source text without exposing fields', source => {
+      const parsed = card('4.0', `BDAY:${source}`)
+      expect(parsed.birthDay?.value).toMatchObject({ hour: null, minute: null, second: null, offset: null, source })
+      expect(serialize(parsed)).toContain(`BDAY:${source}\r\n`)
+    })
+
+  it('validates time fields in constructed and edited timestamps and date-times', () => {
+    expect(() => new VPropertyTimestampValue(2024, 1, 1, 24, 0, 0).serialize())
+      .toThrow('Invalid time value')
+    const dateTime = new VPropertyDateTimeValue(new VPropertyDateValue(2024, 1, 1), new VPropertyTimeValue(12, 60))
+    expect(() => dateTime.serialize()).toThrow('Invalid time value')
+
+    const time = new VPropertyTimeValue().deserialize('120000Z')
+    time.hour = 24
+    expect(() => time.serialize()).toThrow('Invalid time value')
+
+    const timestamp = new VPropertyTimestampValue().deserialize('20240101T120000Z')
+    timestamp.offset = 1440
+    expect(() => timestamp.serialize()).toThrow('Invalid time value')
+  })
+})
+
 describe('temporal properties', () => {
   it('deserializes date values', () => {
     const card = deserializeCard([

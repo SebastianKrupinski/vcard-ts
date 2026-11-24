@@ -138,7 +138,15 @@ function formatOffset(offset: number | null, extended: boolean): string {
 
 /** Format a time in the standard form: extended for vCard 3.0, basic for 4.0. */
 export function formatTime({ hour, minute, second, offset }: TimeFields, extended: boolean): string {
-	if (hour === null && minute === null && second === null) return ''
+	if (![hour, minute, second, offset].every(field => field === null || Number.isInteger(field))
+		|| !inRange(hour, 0, 23) || !inRange(minute, 0, 59) || !inRange(second, 0, 60)
+		|| !inRange(offset, -1439, 1439)) {
+		throw new Error('Invalid time value: fields must be integers within their allowed ranges')
+	}
+	if (hour === null && minute === null && second === null) {
+		if (offset !== null) throw new Error('Invalid time value: a UTC offset requires a time')
+		return ''
+	}
 	if (hour !== null && minute === null && second !== null) {
 		throw new Error('Invalid time value: a time with an hour and second must also have a minute')
 	}

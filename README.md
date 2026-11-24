@@ -229,6 +229,11 @@ follow the same rule. February 29 without a year remains valid. Dates constructe
 or edited in code must have valid integer fields and a valid calendar day;
 serialization throws if they do not.
 
+Constructed or edited times require integer hours from 0 to 23, minutes from 0 to
+59, seconds from 0 to 60, and UTC offsets from -1439 to 1439 minutes. An offset
+requires a time. Invalid numeric fields throw on serialization; invalid parsed
+text retains its source without exposing parsed fields.
+
 ## Generic property access
 
 Use `first` and `all` for registered properties without a named getter,
