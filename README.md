@@ -52,6 +52,9 @@ const card = deserializeCard(input)
 
 Add typed properties directly to a new card:
 
+`createCard()` defaults to 4.0. It accepts only `'3.0'` or `'4.0'`; unsupported
+runtime values throw instead of falling back to another version.
+
 ```ts
 import {
   createCard, serialize, VPropertyNameType, VPropertyNameValue,

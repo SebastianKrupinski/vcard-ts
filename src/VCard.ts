@@ -177,13 +177,10 @@ function serializeCard(card: VCardInterface): string {
  * @param version
  */
 export function createCard(version: '3.0' | '4.0' = '4.0'): VCard {
-	let v: VCardVersion
-	if (typeof version === 'string') {
-		v = VCardVersion[('V' + version.replace('.', '_')) as keyof typeof VCardVersion] ?? VCardVersion.V3_0
-	} else {
-		v = version
+	if (version !== '3.0' && version !== '4.0') {
+		throw new Error(`Unsupported vCard version: ${String(version)}`)
 	}
-	return new VCard(v, new VPropertyCollection())
+	return new VCard(version === '3.0' ? VCardVersion.V3_0 : VCardVersion.V4_0, new VPropertyCollection())
 }
 
 export default {

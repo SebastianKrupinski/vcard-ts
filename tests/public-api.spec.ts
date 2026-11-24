@@ -82,6 +82,17 @@ describe('public API', () => {
   it('creates empty editable cards for supported output versions', () => {
     expect(createCard('3.0')).toMatchObject({ version: '3.0', properties: [] })
     expect(createCard('4.0')).toMatchObject({ version: '4.0', properties: [] })
+    expect(createCard(VCardVersion.V3_0).version).toBe('3.0')
+    expect(createCard(VCardVersion.V4_0).version).toBe('4.0')
+    expect(createCard().version).toBe('4.0')
+    expect(createCard(undefined).version).toBe('4.0')
+  })
+
+  it.each(['2.1', '5.0', '', '3_0', '4.0 ', 4, null, {}])('rejects unsupported construction version %j', version => {
+    expect(() => {
+      // @ts-expect-error Exercise runtime validation for JavaScript callers.
+      createCard(version)
+    }).toThrow('Unsupported vCard version:')
   })
 
   it('finds properties by their stable identifier', () => {
