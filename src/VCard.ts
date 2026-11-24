@@ -82,7 +82,11 @@ export function deserializeCard(data: string): VCard {
 
 		const prop = decodeProperty(line)
 		if (!prop) continue
-		if (prop.name.toUpperCase() === 'VERSION') versionLineIndex = index
+		const name = prop.name.toUpperCase()
+		if (name === 'BEGIN' || name === 'END') {
+			throw new Error(`Invalid vCard data: unexpected card boundary property: ${name}`)
+		}
+		if (name === 'VERSION') versionLineIndex = index
 
 		properties.push(prop)
 	}

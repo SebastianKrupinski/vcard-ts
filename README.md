@@ -383,6 +383,8 @@ card must contain exactly one `VERSION` property and at least one `FN`
 property. A vCard 3.0 card must also contain an `N` property.
 For vCard 4.0, `VERSION` must be the first unfolded line after `BEGIN:VCARD`,
 without intervening properties or blank lines. vCard 3.0 allows a later `VERSION`.
+`BEGIN` and `END` are reserved for card boundaries; extra occurrences inside a
+card, including malformed markers such as `END:VCARDjunk`, are rejected.
 
 Malformed `CLIENTPIDMAP` mappings are rejected instead of being written back as
 empty values. Each mapping needs a positive safe-integer source ID and an absolute
