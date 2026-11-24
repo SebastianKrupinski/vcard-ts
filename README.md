@@ -243,8 +243,9 @@ if (card.has('EMAIL')) {
 
 ## Property groups and parameters
 
-Groups and parameters remain available on each property. Parsed parameter
-names are normalized to uppercase, so the `TYPE` in
+Groups and parameters remain available on each property. Parsed parameter names,
+names passed to parameter class constructors, and keys created by
+`VParameterCollection` are normalized to uppercase, so the `TYPE` in
 `EMAIL;TYPE=work:jane@example.com` can be accessed directly by name:
 
 ```ts

@@ -7,7 +7,7 @@ export class VParameterObject implements VParameterObjectInterface {
 	protected _value: string
 
 	constructor(name: string = '', value: string = '') {
-		this.name = name
+		this.name = name.toUpperCase()
 		this._value = value
 	}
 
@@ -76,7 +76,8 @@ export class VParameterCollection {
 
 	constructor(params: Array<{ name: string, value: string }> = []) {
 		for (const param of params) {
-			this[param.name] = createParameter(param.name, param.value)
+			const parameter = createParameter(param.name, param.value)
+			this[parameter.name] = parameter
 		}
 	}
 

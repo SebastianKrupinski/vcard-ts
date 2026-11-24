@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { decodeParameters } from '../src/codecs/parameter'
 
-import { deserializeCard, serialize } from '../src/VCard'
-import { VParameterListObject, VParameterObject } from '../src/parameters/VParameterObject'
+import { deserializeCard, serialize, serializeProperty } from '../src/VCard'
+import { VParameterCollection, VParameterListObject, VParameterObject } from '../src/parameters/VParameterObject'
 import { VPropertyTextType } from '../src/properties/VPropertyTextType'
+import { VPropertyUriOrTextType } from '../src/properties/VPropertyUriOrTextType'
 
 function property(line: string) {
   const card = deserializeCard([
@@ -15,6 +16,48 @@ function property(line: string) {
   ].join('\r\n'))
   return card.properties.at(-1)!
 }
+
+describe('parameter construction', () => {
+  it.each(['label', 'LaBeL', 'x-Custom'])('normalizes the scalar name %s without changing its value', name => {
+    const parameter = new VParameterObject(name, 'MixedCase')
+    expect(parameter.name).toBe(name.toUpperCase())
+    expect(parameter.value).toBe('MixedCase')
+  })
+
+  it.each(['type', 'pId', 'sort-as'])('normalizes the list name %s without changing its items', name => {
+    const parameter = new VParameterListObject(name, ['MixedCase', 'a,b'])
+    expect(parameter.name).toBe(name.toUpperCase())
+    expect(parameter.list).toEqual(['MixedCase', 'a,b'])
+  })
+
+  it('stores constructed parameters under uppercase keys and selects list models', () => {
+    const params = new VParameterCollection([
+      { name: 'type', value: 'work,voice' },
+      { name: 'pId', value: '1.1,2.1' },
+      { name: 'sort-as', value: 'Doe,Jane' },
+      { name: 'LaBeL', value: 'Desk, North' },
+      { name: 'x-Custom', value: 'MixedCase' },
+    ])
+
+    expect(Object.keys(params)).toEqual(['TYPE', 'PID', 'SORT-AS', 'LABEL', 'X-CUSTOM'])
+    expect(params.TYPE).toBeInstanceOf(VParameterListObject)
+    expect(params.TYPE).toMatchObject({ list: ['work', 'voice'] })
+    expect(params.PID).toMatchObject({ list: ['1.1', '2.1'] })
+    expect(params['SORT-AS']).toMatchObject({ list: ['Doe', 'Jane'] })
+    expect(params.LABEL).toMatchObject({ name: 'LABEL', value: 'Desk, North' })
+    expect(params['X-CUSTOM']).toMatchObject({ name: 'X-CUSTOM', value: 'MixedCase' })
+  })
+
+  it('uses a lowercase construction VALUE parameter before interpreting the property value', () => {
+    const params = new VParameterCollection([{ name: 'value', value: 'text' }])
+    const property = new VPropertyUriOrTextType('UID', 'one,two;three', null, params)
+
+    expect(property.value).toBe('one,two;three')
+    const line = serializeProperty(property)
+    expect(line).toBe('UID;VALUE=text:one\\,two\\;three')
+    expect(decodeParameters(';VALUE=text:x').params.VALUE).toMatchObject(params.VALUE)
+  })
+})
 
 describe('parameter deserialization', () => {
   it('extracts multiple parameters from a property', () => {
