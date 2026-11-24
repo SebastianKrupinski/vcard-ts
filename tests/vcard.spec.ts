@@ -11,6 +11,29 @@ const SINGLE = [
 ].join('\r\n')
 
 describe('vCard deserialization', () => {
+  it.each(['FN:Before Version', 'X-CUSTOM:before version', ''])
+    ('rejects a vCard 4.0 VERSION preceded by %j', precedingLine => {
+      const source = ['BEGIN:VCARD', precedingLine, 'VERSION:4.0', 'FN:Jane Doe', 'END:VCARD'].join('\r\n')
+      expect(() => deserializeCard(source)).toThrow('VERSION must immediately follow BEGIN:VCARD')
+    })
+
+  it.each(['VERSION:4.0', 'version:4.0', 'VER\r\n SION:4.0'])
+    ('accepts the first unfolded property %j as VERSION', versionLine => {
+      const source = ['BEGIN:VCARD', versionLine, '', 'FN:Jane Doe', 'END:VCARD'].join('\r\n')
+      expect(deserializeCard(source).version).toBe('4.0')
+    })
+
+  it('continues to accept a vCard 3.0 VERSION after other properties', () => {
+    const source = ['BEGIN:VCARD', 'FN:Jane Doe', 'N:Doe;Jane;;;', 'VERSION:3.0', 'END:VCARD'].join('\r\n')
+    expect(deserializeCard(source).version).toBe('3.0')
+  })
+
+  it('reports the card and starting line for a misplaced VERSION in batch input', () => {
+    const invalid = ['BEGIN:VCARD', 'FN:Jane Doe', 'VERSION:4.0', 'END:VCARD'].join('\r\n')
+    expect(() => deserialize(`${SINGLE}\r\n${invalid}`))
+      .toThrow('card 2 at line 6: Invalid vCard data: VERSION must immediately follow BEGIN:VCARD')
+  })
+
   it('deserializes a single card', () => {
     const card = deserializeCard(SINGLE)
 

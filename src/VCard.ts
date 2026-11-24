@@ -71,6 +71,7 @@ export function deserializeCard(data: string): VCard {
 
 	const lines = unfoldContentLines(data)
 	const properties = new VPropertyCollection()
+	let versionLineIndex = -1
 
 	for (const [index, line] of lines.entries()) {
 		if (line.length === 0) continue
@@ -81,6 +82,7 @@ export function deserializeCard(data: string): VCard {
 
 		const prop = decodeProperty(line)
 		if (!prop) continue
+		if (prop.name.toUpperCase() === 'VERSION') versionLineIndex = index
 
 		properties.push(prop)
 	}
@@ -94,6 +96,9 @@ export function deserializeCard(data: string): VCard {
 	if (typeof versionValue !== 'string'
 		|| !Object.values(VCardVersion).includes(versionValue as VCardVersion)) {
 		throw new Error(`Invalid vCard data: unsupported VERSION value ${String(versionValue)}`)
+	}
+	if (versionValue === VCardVersion.V4_0 && versionLineIndex !== 1) {
+		throw new Error('Invalid vCard data: VERSION must immediately follow BEGIN:VCARD for version 4.0')
 	}
 
 	validatePropertyCardinalities(
