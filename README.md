@@ -139,6 +139,10 @@ The current named getters are:
 Other registered properties are still parsed into their appropriate property
 types and can be accessed by name.
 
+Unknown properties use the generic model. When `VALUE=uri` is declared, their
+string values are preserved without text decoding or escaping, including when
+constructed or assigned in code.
+
 ## Structured values
 
 Structured properties expose their individual fields. There is no need to

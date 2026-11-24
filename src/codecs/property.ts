@@ -41,7 +41,10 @@ export function encodeProperty(
 function encodeTypedPropertyValue(property: VPropertyBaseInterface, version: VCardVersion): string {
 	const value = property.value
 	if (value === null || value === undefined) return ''
-	if (typeof value === 'string') return encodePropertyValue(value)
+	if (typeof value === 'string') {
+		const isUri = property.params.VALUE?.value.toUpperCase() === VParameterValueOptions.URI
+		return isUri ? value : encodePropertyValue(value)
+	}
 	if (Array.isArray(value)) {
 		return value.map(item => encodePropertyValue(item)).join(',')
 	}

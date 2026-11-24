@@ -43,7 +43,8 @@ export class VPropertyBase<T = string | string[] | VPropertyValueBase> implement
 	 * assignments pass encoded=false to preserve literal application text.
 	 */
 	deserialize(value: string, encoded: boolean = true): this {
-		this._value = (encoded ? decodePropertyValue(value) : value) as T
+		const isUri = this.params.VALUE?.value.toUpperCase() === VParameterValueOptions.URI
+		this._value = (encoded && !isUri ? decodePropertyValue(value) : value) as T
 		return this
 	}
 
@@ -111,7 +112,11 @@ export class VPropertyBase<T = string | string[] | VPropertyValueBase> implement
 	}
 
 	private valueType(): string {
-		return this._value instanceof VPropertyValueBase ? this._value.type() : VParameterValueOptions.TEXT
+		if (this._value instanceof VPropertyValueBase) return this._value.type()
+		if (typeof this._value === 'string' && this.params.VALUE?.value.toUpperCase() === VParameterValueOptions.URI) {
+			return VParameterValueOptions.URI
+		}
+		return VParameterValueOptions.TEXT
 	}
 
 	get hasValue(): boolean {
