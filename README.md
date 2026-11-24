@@ -373,6 +373,11 @@ Malformed `CLIENTPIDMAP` mappings are rejected instead of being written back as
 empty values. Each mapping needs a positive safe-integer source ID and an absolute
 URI without whitespace; incomplete constructed mappings throw on serialization.
 
+Encoded UTC offsets must have a sign and two-digit hours, with optional two-digit
+minutes. Hours above 23, minutes above 59, and malformed offsets are rejected.
+Unset or invalid numeric UTC offset models throw on serialization instead of
+producing empty values.
+
 For vCard 4.0, registered singleton properties such as `N`, `UID`, `REV`,
 `BDAY`, `ANNIVERSARY`, and `GENDER` may occur at most once. Alternative
 representations carrying the same `ALTID` count as one logical property.

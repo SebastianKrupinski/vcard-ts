@@ -14,20 +14,15 @@ export class VPropertyUtcOffsetValue extends VPropertyValueBase {
 	}
 
 	deserialize(value: string): VPropertyUtcOffsetValue {
-		this._source = null
 		const match = value.match(/^([+-])(\d{2})(?:(:?)(\d{2}))?$/)
-		if (!match) {
-			this._offset = null
-			this._extended = false
-			return this
+		if (!match || match[0] !== value) {
+			throw new Error(`Invalid UTC offset value: ${value}`)
 		}
 
 		const hours = Number(match[2])
 		const minutes = Number(match[4] ?? 0)
 		if (hours > 23 || minutes > 59) {
-			this._offset = null
-			this._extended = false
-			return this
+			throw new Error(`Invalid UTC offset value: ${value}`)
 		}
 
 		const sign = match[1] === '+' ? 1 : -1
@@ -39,7 +34,9 @@ export class VPropertyUtcOffsetValue extends VPropertyValueBase {
 
 	serialize(): string {
 		if (this._source !== null) return this._source
-		if (this._offset === null) return ''
+		if (this._offset === null) {
+			throw new Error('Invalid UTC offset value: expected an integer offset in minutes between -1439 and 1439')
+		}
 
 		const sign = this._offset >= 0 ? '+' : '-'
 		const absoluteOffset = Math.abs(this._offset)

@@ -6,6 +6,39 @@ import { VPropertyUriValue } from '../src/properties/VPropertyUriValue'
 import { VPropertyUtcOffsetValue } from '../src/properties/VPropertyUtcOffsetValue'
 
 describe('time zone properties', () => {
+  it.each(['', 'nonsense', '+5', '+05:', '+05:0', '0500', '+24', '+2400', '+00:60'])
+    ('rejects malformed encoded UTC offset %j', offset => {
+      const source = ['BEGIN:VCARD', 'VERSION:4.0', 'FN:Jane', `TZ;VALUE=utc-offset:${offset}`, 'END:VCARD'].join('\r\n')
+      expect(() => deserializeCard(source)).toThrow('Invalid UTC offset value')
+
+      const value = new VPropertyUtcOffsetValue().deserialize('-05:00')
+      expect(() => value.deserialize(offset)).toThrow('Invalid UTC offset value')
+      expect(value.offset).toBe(-300)
+      expect(value.serialize()).toBe('-05:00')
+    })
+
+  it('rejects a trailing line break in the offset value model', () => {
+    expect(() => new VPropertyUtcOffsetValue().deserialize('+0500\n'))
+      .toThrow('Invalid UTC offset value')
+  })
+
+  it.each([1440, -1440, 1.5, NaN, Infinity, null])('rejects incomplete or invalid numeric offset %j on serialization', offset => {
+    const property = new VPropertyTimeZoneType('TZ', new VPropertyUtcOffsetValue(offset))
+    expect(() => serializeProperty(property)).toThrow('Invalid UTC offset value')
+  })
+
+  it('rejects an invalid numeric assignment without replacing the property value', () => {
+    const property = new VPropertyTimeZoneType('TZ', '-05:00')
+    expect(() => { property.value = '+24:00' }).toThrow('Invalid UTC offset value')
+    expect(serializeProperty(property)).toBe('TZ;VALUE=UTC-OFFSET:-05:00')
+  })
+
+  it('does not serialize stale source text after an invalid numeric edit', () => {
+    const value = new VPropertyUtcOffsetValue().deserialize('+05')
+    value.offset = 1440
+    expect(() => value.serialize()).toThrow('Invalid UTC offset value')
+  })
+
   it.each([
     ['+05', 300],
     ['-03', -180],
