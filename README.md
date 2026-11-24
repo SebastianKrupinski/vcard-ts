@@ -187,6 +187,12 @@ if (address) {
 const output = serialize(card)
 ```
 
+`GEO` coordinate values use `VPropertyUriGeoValue`. Parsed altitude and URI
+parameters are preserved, including when latitude or longitude is edited.
+Other URI schemes use `VPropertyUriValue`; narrow with `instanceof
+VPropertyUriGeoValue` before accessing coordinate fields. Malformed coordinate
+strings are rejected instead of being converted to zeroes.
+
 ## Dates and times
 
 Date and time properties expose their fields, such as `year`, `month`, `hour`,

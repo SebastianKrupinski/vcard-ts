@@ -169,6 +169,8 @@ describe('round trip against source text', () => {
     ['4.0', 'TZ;VALUE=text:Raleigh/North America'],
     ['3.0', 'GEO:37.386013;-122.082932'],
     ['4.0', 'GEO:geo:46.772673,-71.282945'],
+    ['4.0', 'GEO:geo:46.772673,-71.282945,10'],
+    ['4.0', 'GEO:geo:46.772673,-71.282945;u=20'],
     ['4.0', 'BDAY;VALUE=text:circa 1800'],
     ['3.0', 'PHOTO;ENCODING=b;TYPE=JPEG:AAAA'],
     ['3.0', 'SOUND;ENCODING=b;TYPE=WAV:AAAA'],
@@ -209,15 +211,6 @@ describe('round trip against source text', () => {
 // bug is fixed, then fails to say the case should move up to the passing list.
 describe('known round-trip bugs', () => {
   it.fails.each<[Version, string]>([
-    // Geographic URI details
-    ['4.0', 'GEO:geo:46.772673,-71.282945,10'],
-    ['4.0', 'GEO:geo:46.772673,-71.282945;u=20'],
-  ])('%s %s', (version, line) => {
-    expectToRoundTrip(card(version, line))
-  })
-
-  it.fails.each<[Version, string]>([
-    ['4.0', 'GEO:not-a-geo'],
     ['4.0', 'a.b.NOTE:x'],
     ['4.0', 'NOTE:a\\:b'],
   ])('%s %s should be kept or rejected, not altered', (version, line) => {
